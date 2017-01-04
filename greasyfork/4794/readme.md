@@ -11,13 +11,7 @@ Bangumi.tv(Bangumi 番组计划) HomePage Anime Chinese-Name Shower
 手动更新前请务必记得***备份你的words变量***!
 
 - 预览图片如下:
-<table>
-	<tr>
-		<td>使用前</td>
-		<td>使用后</td>
-	</tr>
-	<tr>
-		<td><img alt="使用前" src="https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4794/preview01.png"/></td>
-		<td><img alt="使用后" src="https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4794/preview02.png"/></td>
-	</tr>
-</table>
+
+使用前 | 使用后
+------------ | -------------
+![](https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4794/preview01.png) | ![](https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4794/preview02.png)
