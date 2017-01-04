@@ -1,0 +1,19 @@
+{
+	"env": {
+		"browser": true
+	},
+	"extends": "eslint:recommended",
+	"rules": {
+		"indent": [ "warn", "tab" ],
+		"quotes": [ "error", "single" ],
+		"semi": [ "error", "always" ],
+		"linebreak-style": [ "error", "windows" ],
+		"no-unused-vars": [ "warn", { "vars": "all", "args": "after-used" } ],
+		"no-shadow": [ "warn" ],
+		"no-redeclare": [ "warn" ],
+		"no-unused-expressions": [ "error" ],
+		"no-console": [ "warn" ]
+	},
+	"globals": {
+	}
+}

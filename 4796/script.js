@@ -11,4 +11,4 @@
 var regex = /square|thumbnail|bmiddle/;
 
 if (regex.test(location.href))
-	location.href = location.href.replace(regex, "large");
+	location.href = location.href.replace(regex, 'large');
