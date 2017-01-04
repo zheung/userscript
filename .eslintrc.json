@@ -12,7 +12,8 @@
 		"no-shadow": [ 1 ],
 		"no-redeclare": [ 1 ],
 		"no-unused-expressions": [ 2 ],
-		"no-console": [ 0 ]
+		"no-console": [ 0 ],
+		"no-extra-boolean-cast": [ 0 ]
 	},
 	"globals": {
 	}
