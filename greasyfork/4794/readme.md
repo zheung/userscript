@@ -17,7 +17,7 @@ Bangumi.tv(Bangumi 番组计划) HomePage Anime Chinese-Name Shower
 		<td>使用后</td>
 	</tr>
 	<tr>
-		<td><img alt="使用前" src="https://raw.githubusercontent.com/zheung/DanoR-User-Scripts/master/4794/preview01.png"/></td>
-		<td><img alt="使用后" src="https://raw.githubusercontent.com/zheung/DanoR-User-Scripts/master/4794/preview02.png"/></td>
+		<td><img alt="使用前" src="https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4794/preview01.png"/></td>
+		<td><img alt="使用后" src="https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4794/preview02.png"/></td>
 	</tr>
 </table>
