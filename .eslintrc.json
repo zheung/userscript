@@ -4,15 +4,15 @@
 	},
 	"extends": "eslint:recommended",
 	"rules": {
-		"indent": [ "warn", "tab" ],
-		"quotes": [ "error", "single" ],
-		"semi": [ "error", "always" ],
-		"linebreak-style": [ "error", "windows" ],
-		"no-unused-vars": [ "warn", { "vars": "all", "args": "after-used" } ],
-		"no-shadow": [ "warn" ],
-		"no-redeclare": [ "warn" ],
-		"no-unused-expressions": [ "error" ],
-		"no-console": [ "warn" ]
+		"indent": [ 1, "tab" ],
+		"quotes": [ 2, "single" ],
+		"semi": [ 2, "always" ],
+		"linebreak-style": [ 2, "windows" ],
+		"no-unused-vars": [ 1, { "vars": "all", "args": "after-used" } ],
+		"no-shadow": [ 1 ],
+		"no-redeclare": [ 1 ],
+		"no-unused-expressions": [ 2 ],
+		"no-console": [ 0 ]
 	},
 	"globals": {
 	}
