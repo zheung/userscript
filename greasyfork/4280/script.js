@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name Google Redirect Remover
-// @namespace http://weibo.com/zheung
-// @version 2.8.17012101
-// @description A very simple Google redirect remove
-// @include  /^https?://www\.google\.*?/.*$/
-// @grant none
-// @copyright DanoR
+// @name         Google Redirect Remover
+// @description  A very simple Google redirect remove
+// @version      2.8.17012102
+// @author       DanoR
+// @namespace    http://weibo.com/zheung
+// @grant        none
+// @include      *://www.google.*/*
 // ==/UserScript==
 
 (function() {

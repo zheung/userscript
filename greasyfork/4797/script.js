@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Forum(Discuz! X) Base-Profile One-Clicked Filler
 // @description  Discuz! X-论坛-基本资料-一键填写
-// @version      1.0.17012101
+// @version      1.0.17012102
 // @author       DanoR
 // @namespace    http://weibo.com/zheung
 // @grant        none
-// @include      /op=base/
+// @include      *://*op=base*
 // ==/UserScript==
 
 (function() {
