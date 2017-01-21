@@ -3,7 +3,7 @@ Bangumi Tookit
 #### 没有L!
 
 - 演示GIF
-![](https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/10786/preview01.gif)
+  - ![](https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/10786/preview01.gif)
 
 - 从右下角"**显示春菜**"处点击"工具"，然后开始配置
 - 脚本附带一些示例的链接类型和一些条目的配置，可作为例子参考。

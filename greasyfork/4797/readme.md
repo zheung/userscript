@@ -9,4 +9,4 @@ Forum(Discuz! X) Base-Profile One-Clicked Filler
 - 进入"个人资料"页面后，请先按"基本资料"。
 
 - 示例图
-![](https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4797/preview01.gif)
+  - ![](https://raw.githubusercontent.com/zheung/userscript/master/greasyfork/4797/preview01.gif)

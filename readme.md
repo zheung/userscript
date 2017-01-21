@@ -1,8 +1,8 @@
 DanoR-User-Scripts
 ====
 
-一些自己写的浏览器使用的用户脚本.
-用于保存以及同步到[我的GreasyFork](https://greasyfork.org/zh-CN/users/4525).
+- 一些自己写的浏览器使用的用户脚本
+- 用于保存以及同步到[我的GreasyFork](https://greasyfork.org/zh-CN/users/4525)
 
 Script List
 ====
