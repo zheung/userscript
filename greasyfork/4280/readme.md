@@ -1,1 +1,3 @@
-A very simple Google redirect remove
+Google Redirect Remover
+==============
+#### A very simple Google redirect remove
