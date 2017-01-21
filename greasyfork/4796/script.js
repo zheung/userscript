@@ -5,7 +5,6 @@
 // @author       DanoR
 // @namespace    https://danor.top/
 // @grant        none
-// @include      http?://*.sinaimg.cn/*
 // @include      /^https?://.*?\.sinaimg\.cn/.*$/
 // ==/UserScript==
 
