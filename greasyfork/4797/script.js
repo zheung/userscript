@@ -44,11 +44,13 @@
 		}
 	};
 
-	document.querySelector('button#profilesubmitbtn.pn.pnc').parentNode.innerHTML += '<button id="fill" type="button" class="pnc pn"><strong>填写</strong></button>';
+	document.querySelector('button#profilesubmitbtn.pn.pnc').parentNode.innerHTML +=
+	'<button id="fill" type="button" class="pnc pn"><strong>填写</strong></button>';
 	document.querySelector('button#fill.pn.pnc').onclick = fill;
 
 	function fill() {
 		var i;
+
 		var privacys = document.querySelectorAll('td.p>select');
 		for(i=0; i<privacys.length; i++) privacys[i].value = 3;
 
@@ -80,6 +82,6 @@
 			if(cityReside) cityReside.value = info.resideplace.data[1];
 
 			if(cityBirth.value == info.birthplace.data[1] && cityReside.value == info.resideplace.data[1]) clearInterval(intervalID);
-		},2014);
+		}, 2014);
 	}
 })();
