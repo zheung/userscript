@@ -13,7 +13,7 @@
 		var list = document.querySelectorAll('.vd-list.l2>li'), i;
 
 		for(i=0; i<list.length; i++)
-			if(list[i].innerHTML.indexOf('生肉') != -1)
+			if(list[i].innerHTML.indexOf('生肉')+1)
 				list[i].style.display = 'none';
 	}, 2014);
 })();
