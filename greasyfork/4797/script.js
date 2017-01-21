@@ -73,8 +73,7 @@
 		provinceReside.value = info.resideplace.data[0];
 		provinceReside.onchange();
 
-		var intervalID = setInterval(function()
-		{
+		var intervalID = setInterval(function() {
 			var cityBirth = document.querySelector('select#birthcity.ps');
 			if(cityBirth) cityBirth.value = info.birthplace.data[1];
 			var cityReside = document.querySelector('select#residecity.ps');
