@@ -16,5 +16,9 @@
 		"no-extra-boolean-cast": [ 0 ]
 	},
 	"globals": {
+		"$": true,
+		"GM_getValue": true,
+		"GM_setValue": true,
+		"GM_addStyle": true
 	}
 }
