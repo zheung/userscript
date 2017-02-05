@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SauceNAO Moder
 // @description  Advanced-options auto expand | Change link on hentai-foundry result from picutre to illust-page
-// @version      1.0.1702054
+// @version      1.0.1702055
 // @author       DanoR
 // @namespace    http://weibo.com/zheung
 // @grant        none
@@ -27,8 +27,10 @@
 			a.target = '_blank';
 
 			if(a.innerHTML.indexOf('hentai-foundry')+1) {
-				a.href = 'http://www.hentai-foundry.com/pictures/user/' +
-					a.href.match(/\/b\/(.*?\/\d+?)\//)[1];
+				var r = a.href.match(/com\/\w\/(.*?\/\d+?)\//);
+
+				if(r)
+					a.href = 'http://www.hentai-foundry.com/pictures/user/' + r[1];
 
 				a.innerHTML = 'hentai-foundry.com';
 			}
