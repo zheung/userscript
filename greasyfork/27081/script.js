@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SauceNAO Moder
-// @description  Advanced-options auto expand | Change link on hentai-foundry result from picutre to illust-page
-// @version      1.0.1702055
+// @description  Easy to Use SauceNAO
+// @version      1.0.1702056
 // @author       DanoR
 // @namespace    http://weibo.com/zheung
 // @grant        none
