@@ -29,7 +29,7 @@ if(self == top) { (function() {
 			}
 		};
 
-		xhr.open('GET', 'http://localhost/fh/pwd?k=danor&s='+location.host, true);
+		xhr.open('GET', 'http://localhost/fh/pwd?c=danor&d='+location.host, true);
 		xhr.send();
 
 		clearInterval(itr);
