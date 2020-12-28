@@ -1,0 +1,9 @@
+{
+	"name": "uscript",
+	"version": "1.0.0",
+	"description": "Nuogz Userscripts",
+	"author": "Nuogz",
+	"devDependencies": {
+		"eslint": "^7.16.0"
+	}
+}
