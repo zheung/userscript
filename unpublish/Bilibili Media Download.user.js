@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      BiliBili Media Download
 // @namespace https://danor.app/
-// @version   0.4.0-20201230
+// @version   0.4.2-20201230
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -206,24 +206,30 @@ const onClickDown = async function(event) {
 };
 
 const initButton = function() {
-	const buttonShare = document.querySelector('.share-info');
+	const buttonSetting = document.querySelector('.bilibili-player-video-danmaku-setting');
 
-	const buttonDown = buttonShare.cloneNode(true);
-	buttonDown.classList.add('nz-tmd-button');
+	if(buttonSetting) {
+		const buttonDown = buttonSetting.cloneNode(true);
+		buttonSetting.parentNode.insertBefore(buttonDown, buttonSetting.nextElementSibling);
 
-	buttonShare.parentNode.insertBefore(buttonDown, buttonShare.nextElementSibling);
+		const svg = buttonDown.querySelector('svg');
+		svg.setAttribute('viewBox', '0 -5 26 36');
+		svg.innerHTML = '<polygon points="12.732,26 25.464,13.27 18.026,13.27 18.026,0 7.438,0 7.438,13.27 0,13.27" />';
 
-	buttonDown.querySelector('i').classList.remove('icon-share');
-	buttonDown.querySelector('i').classList.add('icon-download');
-	buttonDown.querySelector('span').innerHTML = '下载';
+		buttonDown.classList.add('nz-tmd-button');
+		buttonDown.title = '下载';
+		if(buttonDown.childNodes[1]) { buttonDown.removeChild(buttonDown.childNodes[1]); }
 
-	return buttonDown;
+		return buttonDown;
+	}
+
 };
 
 const observer = new MutationObserver(() => {
 	try {
 		if(!document.querySelector('.nz-tmd-button')) {
-			initButton().addEventListener('click', onClickDown);
+			const buttonDown = initButton();
+			if(buttonDown) { buttonDown.addEventListener('click', onClickDown); }
 		}
 	}
 	catch(error) {
