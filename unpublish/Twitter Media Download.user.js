@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name      Twitter Media Download
 // @namespace https://danor.app/
-// @version   0.4.2020122801
+// @version   0.4.1-20201228
 // @author    Nuogz
-// @match     https://twitter.com/*
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
 // @require   https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
 // @resource  notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
+// @match     https://twitter.com/*
 // ==/UserScript==
 /* global Notyf */
 
@@ -99,8 +99,8 @@ const openDBox = (id) => {
 	return { noty, initer };
 };
 
-const downloadMedia = async (media, tweet, user, prog, textProg) => {
 
+const downloadMedia = async (media, tweet, user, prog, textProg) => {
 	const response = await fetch(media.url);
 	const reader = response.body.getReader();
 
@@ -221,7 +221,7 @@ const onClickDown = async function(event) {
 	});
 };
 
-const initButton = function(divOper, article) {
+const initButton = function(divOper) {
 	const divReply = divOper.children[0];
 	const divShare = divOper.children[3];
 
@@ -244,8 +244,6 @@ const initButton = function(divOper, article) {
 	divDown.children[0].removeAttribute('data-testid');
 	divDown.children[0].children[0].removeAttribute('dir');
 
-	divDown.addEventListener('click', onClickDown.bind(article));
-
 	divDown.addEventListener('mouseover', event => {
 		event.stopPropagation();
 
@@ -258,9 +256,11 @@ const initButton = function(divOper, article) {
 		divDown.children[0].children[0].style.color = '';
 		divDown.children[0].children[0].children[0].children[0].style.backgroundColor = '';
 	});
+
+	return divDown;
 };
 
-const initButton2 = function(divOper, article) {
+const initButton2 = function(divOper) {
 	const divReply = divOper.children[0];
 	const divShare = divOper.children[3];
 
@@ -282,8 +282,6 @@ const initButton2 = function(divOper, article) {
 	divDown.children[0].removeAttribute('role');
 	divDown.children[0].removeAttribute('data-focusable');
 
-	divDown.addEventListener('click', onClickDown.bind(article));
-
 	divDown.addEventListener('mouseover', event => {
 		event.stopPropagation();
 
@@ -296,6 +294,8 @@ const initButton2 = function(divOper, article) {
 		divDown.children[0].children[0].style.color = '';
 		divDown.children[0].children[0].children[0].children[0].style.backgroundColor = '';
 	});
+
+	return divDown;
 };
 
 const observer = new MutationObserver(() => {
@@ -303,15 +303,13 @@ const observer = new MutationObserver(() => {
 		[...document.querySelectorAll('article')]
 			.filter(article => article.querySelectorAll('img[src*="pbs.twimg.com/media"], img[src*="pbs.twimg.com/ext_tw_video_thumb"], img[src*="pbs.twimg.com/tweet_video_thumb"]').length && !article.querySelectorAll('.nz-tmd-button').length)
 			.forEach(article => {
-				let divOper;
+				[...article.querySelector('.r-1mdbhws')]
+					.filter(box => !box.querySelector('div.nz-tmd-button'))
+					.forEach(box => initButton(box).addEventListener('click', onClickDown.bind(article)));
 
-				if((divOper = article.querySelector('.r-1mdbhws')) && !divOper.querySelector('div.nz-tmd-button')) {
-					initButton(divOper, article);
-				}
-
-				if((divOper = article.querySelector('.r-a2tzq0')) && !divOper.querySelector('div.nz-tmd-button')) {
-					initButton2(divOper, article);
-				}
+				[...article.querySelector('.r-a2tzq0')]
+					.filter(box => !box.querySelector('div.nz-tmd-button'))
+					.forEach(box => initButton2(box).addEventListener('click', onClickDown.bind(article)));
 			});
 	}
 	catch(error) {
