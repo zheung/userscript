@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      BiliBili Media Download
 // @namespace https://danor.app/
-// @version   0.4.2-20201230
+// @version   0.4.4-20210101
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -150,16 +150,17 @@ const downloadBAT = ({ video, audio, output, slot }) => {
 	const script = `
 @echo off
 ffmpeg -y -v quiet -i ".\\${video}" -i ".\\${audio}" -vcodec copy -acodec copy ".\\${output}"
-echo ".\\${output}"
+echo Mixed ${output}
 
 del ".\\${video}"
 del ".\\${audio}"
 echo Done
-pause`.replace(/\n/g, '\r\n');
+pause
+del %0`.replace(/\n/g, '\r\n');
 
 	const a = document.createElement('a');
 	a.innerHTML = 'Save';
-	a.download = `copy-${slot}.bat`;
+	a.download = `mix ${slot}.bat`;
 	a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
 	a.click();
 
@@ -173,20 +174,22 @@ const onClickDown = async function(event) {
 	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
 	const audio = source.audio.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
 
-	const slot =
-		location.pathname.startsWith('/bangumi/play/') ? location.pathname.replace('/bangumi/play/', '') : (
-			location.pathname.startsWith('/video/BV') ? location.pathname.replace('/video/', '') : (
-				location.pathname.replace(/^\/|\/$/g, '').split('/').join('-')
-			)
-		);
+	const slot = __INITIAL_STATE__.bvid ||
+		location.pathname.replace(/\/$/, '')
+			.replace('/bangumi/play/', '')
+			.replace('/video/', '');
 
-	const { noty, initer } = openDBox(__INITIAL_STATE__.h1Title);
+	const title = __INITIAL_STATE__.h1Title ||
+		(__INITIAL_STATE__.videoData ? __INITIAL_STATE__.videoData.title : '未知标题');
+	const uid = __INITIAL_STATE__.upData ? (__INITIAL_STATE__.upData.mid || '0') : '0';
+
+	const { noty, initer } = openDBox(title);
 	const { progs, textsProg, } = initer('', 2);
 
 	let unfinish = 2;
 	[
-		[video.baseUrl, `${__INITIAL_STATE__.h1Title}-${slot}-video-${video.height}p.mp4`, `video`],
-		[audio.baseUrl, `${__INITIAL_STATE__.h1Title}-${slot}-audio.mp4`, `audio`],
+		[video.baseUrl, `${uid}-${slot}-${title}-video-${video.height}p.mp4`, `video`],
+		[audio.baseUrl, `${uid}-${slot}-${title}-audio.mp4`, `audio`],
 	].forEach(async (infos, i, medias) => {
 		await downloadMedia(infos, progs[i], textsProg[i], infos[2]);
 
@@ -196,8 +199,8 @@ const onClickDown = async function(event) {
 			downloadBAT({
 				video: medias[0][1],
 				audio: medias[1][1],
-				output: `${__INITIAL_STATE__.h1Title}-${slot}-${video.height}p-${video.bandwidth}.mp4`,
-				slot: `${__INITIAL_STATE__.h1Title}-${slot}`
+				output: `${uid}-${slot}-${title}-${video.height}p-${video.bandwidth}.mp4`,
+				slot: `${uid}-${slot}-${title}`
 			});
 
 			setTimeout(() => notyf.dismiss(noty), 14777);
@@ -225,7 +228,8 @@ const initButton = function() {
 
 };
 
-const observer = new MutationObserver(() => {
+
+new MutationObserver(() => {
 	try {
 		if(!document.querySelector('.nz-tmd-button')) {
 			const buttonDown = initButton();
@@ -235,6 +239,4 @@ const observer = new MutationObserver(() => {
 	catch(error) {
 		console.error(error.message, error.stack);
 	}
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
+}).observe(document.body, { childList: true, subtree: true });
