@@ -1,18 +1,18 @@
 // ==UserScript==
 // @name      BiliBili Media Download
 // @namespace https://danor.app/
-// @version   0.4.4-20210101
+// @version   0.5.0-20210205
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
 // @grant     unsafeWindow
 // @require   https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
-// @require   https://cdn.jsdelivr.net/npm/gbk.js@0.3.0/dist/gbk2.min.js
+// @require   https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.9.7/dist/ffmpeg.min.js
 // @resource  notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
 // @include   *bilibili.com/bangumi/play/*
 // @include   *bilibili.com/video/*
 // ==/UserScript==
-/* global Notyf, __INITIAL_STATE__, GBK */
+/* global Notyf, __INITIAL_STATE__, FFmpeg */
 
 GM_addStyle(GM_getResourceText('notyf_css'));
 GM_addStyle(`
@@ -105,7 +105,7 @@ const openDBox = text => {
 };
 
 
-const downloadMedia = async (infos, prog, textProg, i) => {
+const downloadMedia = async (infos, prog, textProg, type) => {
 	const response = await fetch(infos[0]);
 	const reader = response.body.getReader();
 
@@ -124,7 +124,7 @@ const downloadMedia = async (infos, prog, textProg, i) => {
 			sizeLoaded += value.length;
 
 			textProg.innerHTML = `
-				<div class="inline" style="width: 40px">${i}:</div>
+				<div class="inline" style="width: 40px">${type}:</div>
 				<div class="inline" style="width: 65px">[${renderSize(sizeTotal)}]</div>
 				<div class="inline" style="width: 55px">${(sizeLoaded * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%</div>
 			`.replace(/\t|\n/g, '');
@@ -142,31 +142,37 @@ const downloadMedia = async (infos, prog, textProg, i) => {
 	a.download = infos[1];
 	a.href = URL.createObjectURL(new Blob([datasMedia]));
 	textProg.parentNode.insertBefore(a, textProg.nextElementSibling.nextElementSibling);
-	a.click();
 
 	console.log(`Saved: ${a.download}`);
+
+	return datasMedia;
 };
-const downloadBAT = ({ video, audio, output, slot }) => {
-	const script = `
-@echo off
-ffmpeg -y -v quiet -i ".\\${video}" -i ".\\${audio}" -vcodec copy -acodec copy ".\\${output}"
-echo Mixed ${output}
+// const downloadBAT = ({ video, audio, output, slot }) => {
+// 	const script = `
+// @echo off
+// ffmpeg -y -v quiet -i ".\\${video}" -i ".\\${audio}" -vcodec copy -acodec copy ".\\${output}"
+// echo Mixed ${output}
 
-del ".\\${video}"
-del ".\\${audio}"
-echo Done
-pause
-del %0`.replace(/\n/g, '\r\n');
+// del ".\\${video}"
+// del ".\\${audio}"
+// echo Done
+// pause
+// del %0`.replace(/\n/g, '\r\n');
 
-	const a = document.createElement('a');
-	a.innerHTML = 'Save';
-	a.download = `mix ${slot}.bat`;
-	a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
-	a.click();
+// 	const a = document.createElement('a');
+// 	a.innerHTML = 'Save';
+// 	a.download = `mix ${slot}.bat`;
+// 	a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
+// 	a.click();
 
-	console.log(`Saved: ${a.download}`);
+// 	console.log(`Saved: ${a.download}`);
+// };
+
+const mediasFinal = {
+	video: null,
+	audio: null,
+	mixin: null,
 };
-
 const onClickDown = async function(event) {
 	event.stopPropagation();
 
@@ -190,20 +196,21 @@ const onClickDown = async function(event) {
 	[
 		[video.baseUrl, `${uid}-${slot}-${title}-video-${video.height}p.mp4`, `video`],
 		[audio.baseUrl, `${uid}-${slot}-${title}-audio.mp4`, `audio`],
-	].forEach(async (infos, i, medias) => {
-		await downloadMedia(infos, progs[i], textsProg[i], infos[2]);
+	].forEach(async (infos, i) => {
+		mediasFinal[infos[2]] = await downloadMedia(infos, progs[i], textsProg[i], infos[2]);
 
 		unfinish--;
 
 		if(unfinish == 0) {
-			downloadBAT({
-				video: medias[0][1],
-				audio: medias[1][1],
-				output: `${uid}-${slot}-${title}-${video.height}p-${video.bandwidth}.mp4`,
-				slot: `${uid}-${slot}-${title}`
-			});
+			// downloadBAT({
+			// 	video: medias[0][1],
+			// 	audio: medias[1][1],
+			// 	output: `${uid}-${slot}-${title}-${video.height}p-${video.bandwidth}.mp4`,
+			// 	slot: `${uid}-${slot}-${title}`
+			// });
+			mixinMedia(`${uid}-${slot}-${title}-${video.height}p-${video.bandwidth}.mp4`);
 
-			setTimeout(() => notyf.dismiss(noty), 14777);
+			setTimeout(() => notyf.dismiss(noty), 24777);
 		}
 	});
 };
@@ -228,15 +235,38 @@ const initButton = function() {
 
 };
 
+const ffmpeg = FFmpeg.createFFmpeg({ log: true });
 
-new MutationObserver(() => {
-	try {
-		if(!document.querySelector('.nz-tmd-button')) {
-			const buttonDown = initButton();
-			if(buttonDown) { buttonDown.addEventListener('click', onClickDown); }
+const mixinMedia = async function(nameFile) {
+	if(!mediasFinal.video || !mediasFinal.audio) { return; }
+
+	ffmpeg.FS('writeFile', 'video.mp4', mediasFinal.video);
+	ffmpeg.FS('writeFile', 'audio.mp3', mediasFinal.audio);
+
+	await ffmpeg.run('-y', '-v', 'quiet', '-i', 'video.mp4', '-i', 'audio.mp3', '-vcodec', 'copy', '-acodec', 'copy', 'output.mp4');
+
+	const dataFinal = ffmpeg.FS('readFile', 'output.mp4');
+
+	const a = document.createElement('a');
+	a.download = nameFile;
+	a.href = URL.createObjectURL(new Blob([dataFinal]));
+	a.click();
+
+	console.log(`Saved: ${a.download}`);
+};
+
+(async () => {
+	await ffmpeg.load();
+
+	new MutationObserver(() => {
+		try {
+			if(!document.querySelector('.nz-tmd-button')) {
+				const buttonDown = initButton();
+				if(buttonDown) { buttonDown.addEventListener('click', onClickDown); }
+			}
 		}
-	}
-	catch(error) {
-		console.error(error.message, error.stack);
-	}
-}).observe(document.body, { childList: true, subtree: true });
+		catch(error) {
+			console.error(error.message, error.stack);
+		}
+	}).observe(document.body, { childList: true, subtree: true });
+})();
