@@ -222,12 +222,10 @@ const onClickDown = async function(event) {
 };
 
 const initButton = function(divOper) {
-	const divReply = divOper.children[0];
 	const divShare = divOper.children[3];
 
-	const divDown = divReply.cloneNode(true);
+	const divDown = divShare.cloneNode(true);
 	divDown.classList.add('nz-tmd-button');
-	divDown.querySelector('span.r-n6v787').innerHTML = '下载';
 	divOper.insertBefore(divDown, divShare);
 
 	const svgDown = divDown.querySelector('svg');
@@ -298,16 +296,17 @@ const initButton2 = function(divOper) {
 	return divDown;
 };
 
-const observer = new MutationObserver(() => {
+
+new MutationObserver(() => {
 	try {
 		[...document.querySelectorAll('article')]
 			.filter(article => article.querySelectorAll('img[src*="pbs.twimg.com/media"], img[src*="pbs.twimg.com/ext_tw_video_thumb"], img[src*="pbs.twimg.com/tweet_video_thumb"]').length && !article.querySelectorAll('.nz-tmd-button').length)
 			.forEach(article => {
-				[...article.querySelector('.r-1mdbhws')]
+				[...article.querySelectorAll('.r-1mdbhws')]
 					.filter(box => !box.querySelector('div.nz-tmd-button'))
 					.forEach(box => initButton(box).addEventListener('click', onClickDown.bind(article)));
 
-				[...article.querySelector('.r-a2tzq0')]
+				[...article.querySelectorAll('.r-a2tzq0')]
 					.filter(box => !box.querySelector('div.nz-tmd-button'))
 					.forEach(box => initButton2(box).addEventListener('click', onClickDown.bind(article)));
 			});
@@ -315,6 +314,4 @@ const observer = new MutationObserver(() => {
 	catch(error) {
 		console.error(error.message, error.stack);
 	}
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
+}).observe(document.body, { childList: true, subtree: true });
