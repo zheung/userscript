@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Twitter Media Download
 // @namespace https://danor.app/
-// @version   0.4.1-20201228
+// @version   0.4.2-20210225
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -300,7 +300,7 @@ const initButton2 = function(divOper) {
 new MutationObserver(() => {
 	try {
 		[...document.querySelectorAll('article')]
-			.filter(article => article.querySelectorAll('img[src*="pbs.twimg.com/media"], img[src*="pbs.twimg.com/ext_tw_video_thumb"], img[src*="pbs.twimg.com/tweet_video_thumb"]').length && !article.querySelectorAll('.nz-tmd-button').length)
+			.filter(article => article.querySelectorAll('img[src*="pbs.twimg.com/media"], img[src*="pbs.twimg.com/ext_tw_video_thumb"], img[src*="pbs.twimg.com/tweet_video_thumb"], img[src*="pbs.twimg.com/amplify_video_thumb"]').length && !article.querySelectorAll('.nz-tmd-button').length)
 			.forEach(article => {
 				[...article.querySelectorAll('.r-1mdbhws')]
 					.filter(box => !box.querySelector('div.nz-tmd-button'))
