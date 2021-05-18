@@ -288,28 +288,31 @@ const initElToolbar = function(toolbar) {
 let weibo;
 
 
-(async () => {
-	new MutationObserver(() => {
-		// 判断是否新版微博
-		if(document.querySelector('[class*=woo-box]')) {
-			try {
-				document.querySelectorAll('.woo-box-item-inlineBlock[class*=picture_item_]').forEach(el => {
-					if(!elsItemPicture.has(el)) {
-						initElImage(el);
-					}
-				});
+const observer = new MutationObserver(() => {
+	// 判断是否新版微博
+	if(document.querySelector('[class*=woo-box]')) {
+		try {
+			document.querySelectorAll('.woo-box-item-inlineBlock[class*=picture_item_]').forEach(el => {
+				if(!elsItemPicture.has(el)) {
+					initElImage(el);
+				}
+			});
 
-				elsItemPicture.forEach(el => { if(!document.contains(el)) { elsItemPicture.delete(el); } });
+			elsItemPicture.forEach(el => { if(!document.contains(el)) { elsItemPicture.delete(el); } });
 
-				document.querySelectorAll('[class*=toolbar_main_]').forEach(el => {
-					if(!el.querySelector('.woo-font--download')) {
-						initElToolbar(el);
-					}
-				});
-			}
-			catch(error) {
-				console.error(error.message, error.stack);
-			}
+			document.querySelectorAll('[class*=toolbar_main_]').forEach(el => {
+				if(!el.querySelector('.woo-font--download')) {
+					initElToolbar(el);
+				}
+			});
 		}
-	}).observe(document.body, { childList: true, subtree: true });
-})();
+		catch(error) {
+			console.error(error.message, error.stack);
+		}
+	}
+	else {
+		observer.disconnect();
+	}
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
