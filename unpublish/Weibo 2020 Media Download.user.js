@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Weibo 2020 Media Download
 // @namespace https://danor.app/
-// @version   1.0.0-20210518
+// @version   1.0.1-20210520
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -184,7 +184,7 @@ const downloadPictures = async function(toolbar) {
 	const idWeibo = partsURLWeibo.pop();
 	const idUser = partsURLWeibo.pop();
 
-	const elsImage = [...feed.querySelectorAll('img.woo-picture-img')];
+	const elsImage = [...feed.querySelectorAll('img.woo-picture-img, img[class*=picture_focusImg_]')];
 	const { noty, initer } = openDBox(`下载 ${idUser}@${idWeibo}`);
 	const { progs, textsProg } = initer(`${idUser}@${idWeibo}`, elsImage.length);
 
@@ -198,7 +198,7 @@ const downloadPictures = async function(toolbar) {
 			`Weibo@${idUser}@${idWeibo}@${index + 1}@${nameFile}`,
 			progs[index], textsProg[index], index + 1
 		);
-
+		console.log(unfinish);
 		if(unfinish-- == 0) { setTimeout(() => notyf.dismiss(noty), 24777); }
 	});
 };
@@ -209,7 +209,7 @@ const downloadPicture = async function() {
 	const idWeibo = partsURLWeibo.pop();
 	const idUser = partsURLWeibo.pop();
 
-	const urlImage = weibo.querySelector('img.woo-picture-img').src;
+	const urlImage = weibo.querySelector('img.woo-picture-img, img[class*=picture_focusImg_]').src;
 	const nameFile = urlImage.split('/').pop();
 
 	const weibos = [...weibo.parentNode.childNodes];
@@ -230,7 +230,7 @@ const downloadPicture = async function() {
 };
 
 const searchPicture = function() {
-	unsafeWindow.open(`https://simg.danor.app/${weibo.querySelector('img.woo-picture-img').src.split('/').pop()}`);
+	unsafeWindow.open(`https://simg.danor.app/${weibo.querySelector('img.woo-picture-img, img[class*=picture_focusImg_]').src.split('/').pop()}`);
 };
 
 

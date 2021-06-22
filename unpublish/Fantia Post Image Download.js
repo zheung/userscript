@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name      Fantia Post Image Download
 // @namespace https://danor.app/
-// @version   0.1.0-20210223
+// @version   0.2.0-20210605
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
+// @require   https://cdn.jsdelivr.net/npm/jszip@3.6.0/dist/jszip.min.js
 // @require   https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
 // @resource  notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
 // @include   *fantia.jp/posts/*
 // ==/UserScript==
-/* global Notyf */
+/* global Notyf, JSZip */
 
 GM_addStyle(GM_getResourceText('notyf_css'));
 GM_addStyle(`
@@ -115,7 +116,7 @@ const downloadMedia = async (infos, prog, textProg, title, optionFetch) => {
 			sizeLoaded += value.length;
 
 			textProg.innerHTML = `
-				<div class="inline" style="width: 40px">${title}:</div>
+				<div class="inline" style="width: 40px">${title}: </div>
 				<div class="inline" style="width: 65px">[${renderSize(sizeTotal)}]</div>
 				<div class="inline" style="width: 55px">${(sizeLoaded * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%</div>
 			`.replace(/\t|\n/g, '');
@@ -133,9 +134,11 @@ const downloadMedia = async (infos, prog, textProg, title, optionFetch) => {
 	a.download = infos[1];
 	a.href = URL.createObjectURL(new Blob([datasMedia]));
 	textProg.parentNode.insertBefore(a, textProg.nextElementSibling.nextElementSibling);
-	a.click();
+	// a.click();
 
 	console.log(`Saved: ${a.download}`);
+
+	return datasMedia;
 };
 
 // -------FPIS-------
@@ -176,27 +179,56 @@ const onClickDown = async function(event) {
 		const images = group.querySelectorAll('.image-container>.img-fluid');
 
 		const { noty, initer } = openDBox(gid + 1);
-		const { progs, textsProg, } = initer(images.length);
+		const { progs, textsProg, } = initer(images.length + 1);
 
 		let unfinish = images.length;
+		const datasMediaAll = {};
 		images.forEach(async (image, iid) => {
 			const urlImageFull = await fetchURLImageFull(image);
 			const prefix = `${String(gid + 1).padStart(2, '0')}-${String(iid + 1).padStart(2, '0')}`;
 
+			const name = `[${prefix}]${decodeURI(new URL(urlImageFull).pathname.split('/').pop())}`;
 			const infos = [
 				urlImageFull,
-				`[${prefix}]${decodeURI(new URL(urlImageFull).pathname.split('/').pop())}`,
+				name,
 				iid
 			];
 
-			await downloadMedia(infos, progs[iid], textsProg[iid], prefix, {
+			const datasMedia = await downloadMedia(infos, progs[iid], textsProg[iid], prefix, {
 				referrer: 'https://fantia.jp/',
 				credentials: 'include'
 			});
 
+			datasMediaAll[name] = datasMedia;
+
 			unfinish--;
 
 			if(unfinish == 0) {
+				const zip = new JSZip();
+
+				for(const name in datasMediaAll) {
+					if(Object.hasOwnProperty.call(datasMediaAll, name)) {
+						const datasMedia = datasMediaAll[name];
+						zip.file(name, datasMedia);
+					}
+				}
+
+				const textProgZip = textsProg[textsProg.length - 1];
+
+				const datasZip = await zip.generateAsync({ type: 'uint8array' }, (metadata) => {
+					textProgZip.innerHTML = `
+						<div class="inline" style="width: 105px">[Zip File]: </div>
+						<div class="inline" style="width: 55px">${metadata.percent.toFixed(2).padStart(5, '0')}%</div>
+					`.replace(/\t|\n/g, '');
+				});
+
+				const a = document.createElement('a');
+				a.classList.add('inline', 'save');
+				a.innerHTML = 'Save';
+				a.download = `[${gid + 1}].zip`;
+				a.href = URL.createObjectURL(new Blob([datasZip]));
+				textProgZip.parentNode.insertBefore(a, textProgZip.nextElementSibling.nextElementSibling);
+				a.click();
 
 				setTimeout(() => notyf.dismiss(noty), 14777);
 			}

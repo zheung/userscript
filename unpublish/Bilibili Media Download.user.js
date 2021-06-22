@@ -124,7 +124,7 @@ const downloadMedia = async (infos, prog, textProg, type) => {
 			sizeLoaded += value.length;
 
 			textProg.innerHTML = `
-				<div class="inline" style="width: 40px">${type}:</div>
+				<div class="inline" style="width: 40px">${type}: </div>
 				<div class="inline" style="width: 65px">[${renderSize(sizeTotal)}]</div>
 				<div class="inline" style="width: 55px">${(sizeLoaded * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%</div>
 			`.replace(/\t|\n/g, '');
