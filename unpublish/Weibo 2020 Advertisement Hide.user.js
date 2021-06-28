@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Weibo 2020 Advertisement Hide
 // @namespace https://danor.app/
-// @version   0.1.0-20210622
+// @version   1.2.0-20210627
 // @author    Nuogz
 // @grant     none
 // @include   *weibo.com/*
@@ -30,6 +30,10 @@ const observer = new MutationObserver(() => {
 	// 判断是否新版微博
 	if(QS('[class*=woo-box]')) {
 		try {
+			QA('.vue-recycle-scroller__item-view').forEach(top => {
+				top.style.filter = 'none';
+				top.style.pointerEvents = '';
+			});
 			QA('.wbpro-ad-tag').forEach(ad => {
 				let top;
 
@@ -40,6 +44,7 @@ const observer = new MutationObserver(() => {
 				});
 
 				top.style.filter = 'blur(20px)';
+				top.style.pointerEvents = 'none';
 			});
 		}
 		catch(error) {
