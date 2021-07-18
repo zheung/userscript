@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Weibo 2020 Advertisement Hide
 // @namespace https://danor.app/
-// @version   1.2.0-20210627
+// @version   1.2.1-2021.07.18.01
 // @author    Nuogz
 // @grant     none
 // @include   *weibo.com/*
@@ -34,7 +34,7 @@ const observer = new MutationObserver(() => {
 				top.style.filter = 'none';
 				top.style.pointerEvents = '';
 			});
-			QA('.wbpro-ad-tag').forEach(ad => {
+			QA('.head-info_authtag_29zK2').forEach(ad => {
 				let top;
 
 				EP(ad, parent => {
