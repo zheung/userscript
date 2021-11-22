@@ -10,10 +10,10 @@
 
 (function() {
 	setInterval(function() {
-		var list = document.querySelectorAll('.vd-list.l2>li'), i;
+		const list = document.querySelectorAll('.vd-list.l2>li');
 
-		for(i=0; i<list.length; i++)
-			if(list[i].innerHTML.indexOf('生肉')+1)
+		for(let i = 0; i < list.length; i++)
+			if(list[i].innerHTML.indexOf('生肉') + 1)
 				list[i].style.display = 'none';
 	}, 2014);
 })();

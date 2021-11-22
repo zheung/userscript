@@ -8,6 +8,6 @@
 // @include      *://*.qpic.cn/*
 // ==/UserScript==
 
-var regex = /\d*$/, num = location.href.match(regex);
+const regex = /\d*$/, num = location.href.match(regex);
 
-if (num && ~~num[0] < 2000) location.href = location.href.replace(regex, '2000');
+if(num && ~~num[0] < 2000) location.href = location.href.replace(regex, '2000');

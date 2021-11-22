@@ -9,30 +9,32 @@
 // @include      *
 // ==/UserScript==
 
-if(self == top) { (function() {
-	console.log('FromHelper Gogo');
+if(self == top) {
+	(function() {
+		console.log('FromHelper Gogo');
 
-	var itr = setInterval(function() {
-		var u = document.querySelector('input.pass-text-input-userName'), p = document.querySelector('input.pass-text-input-password');
+		const itr = setInterval(function() {
+			const u = document.querySelector('input.pass-text-input-userName'), p = document.querySelector('input.pass-text-input-password');
 
-		if(!u) return;
+			if(!u) return;
 
 
-		var xhr = new XMLHttpRequest();
+			const xhr = new XMLHttpRequest();
 
-		xhr.onreadystatechange = function() {
-			if(xhr.readyState == 4 && xhr.status == 200) {
-				var r = JSON.parse(xhr.responseText);
+			xhr.onreadystatechange = function() {
+				if(xhr.readyState == 4 && xhr.status == 200) {
+					const r = JSON.parse(xhr.responseText);
 
-				u.value = r.u;
-				p.value = r.p;
-			}
-		};
+					u.value = r.u;
+					p.value = r.p;
+				}
+			};
 
-		xhr.open('GET', 'http://localhost/fh/pwd?c=danor&d='+location.host, true);
-		xhr.send();
+			xhr.open('GET', 'http://localhost/fh/pwd?c=danor&d=' + location.host, true);
+			xhr.send();
 
-		clearInterval(itr);
-		console.log('FromHelper Done');
-	}, 500);
-})(); }
+			clearInterval(itr);
+			console.log('FromHelper Done');
+		}, 500);
+	})();
+}

@@ -9,25 +9,25 @@
 // ==/UserScript==
 
 (function() {
-	var qsa = function(selector) {
-		var result = [], arr = document.querySelectorAll(selector), i;
+	const qsa = function(selector) {
+		const result = [], arr = document.querySelectorAll(selector);
 
-		for(i=0; i<arr.length; i++) result.push(arr[i]);
+		for(let i = 0; i < arr.length; i++) result.push(arr[i]);
 		return result;
 	};
 
 	setTimeout(function() {
 		window.togglenao();
 
-		var as = qsa('div.resultcontentcolumn>a'), i, a;
+		const as = qsa('div.resultcontentcolumn>a');
 
-		for(i in as) {
-			a = as[i];
+		for(const i in as) {
+			const a = as[i];
 
 			a.target = '_blank';
 
-			if(a.innerHTML.indexOf('hentai-foundry')+1) {
-				var r = a.href.match(/com\/\w\/(.*?\/\d+?)\//);
+			if(a.innerHTML.indexOf('hentai-foundry') + 1) {
+				const r = a.href.match(/com\/\w\/(.*?\/\d+?)\//);
 
 				if(r)
 					a.href = 'http://www.hentai-foundry.com/pictures/user/' + r[1];

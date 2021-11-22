@@ -13,18 +13,19 @@
 // @require      https://code.jquery.com/jquery-3.1.1.min.js
 // @run-at       document-end
 // ==/UserScript==
+/* global $ */
 
 (function() {
 	console.log('Bangumi Tookit v1.4.1701291');
 
 	// 加载配置
-	var conf;
-	var useScriptDB = true, //脚本数据开关, false则使用下面的configManual作为每次打开网页的配置,功能一样,BTK的管理功能不会存储修改后的配置
-		configManual = {'trans':true,'search':true,'sort':false,'shift':0,'maxWidth':'520px','searchs':{'dmhy':{'display1':'dmhy','display2':'动漫花园','url':'http://share.dmhy.org/topics/list?keyword=%key'},'bili':{'display1':'bili','display2':'哔哩哔哩','url':'http://search.bilibili.com/all?keyword=%key'},'sohu':{'display1':'sohu','display2':'搜狐专题','url':'http://tv.sohu.com/%key'},'pptv':{'display1':'pptv','display2':'聚力专题','url':'http://v.pptv.com/page/%key.html'},'iqyi':{'display1':'iqyi','display2':'奇艺专题','url':'http://www.iqiyi.com/%key.html'},'letv':{'display1':'letv','display2':'乐视专题','url':'http://www.letv.com/comic/%key.html'},'blav':{'display1':'blav','display2':'哔哩视频','url':'http://www.bilibili.com/video/av%key'},'tudo':{'display1':'tudo','display2':'土豆专题','url':'http://www.tudou.com/albumcover/%key.html'},'yoku':{'display1':'yoku','display2':'优酷专题','url':'http://www.youku.com/show_page/id_%key.html'},'acab':{'display1':'acab','display2':'艾斯视频','url':'http://www.acfun.tv/v/ab%key'}},'dicts':{'975':{'trans':'海贼王','searchs':{'dmhy':'海賊王','sohu':'s2013/onepiece'},'shift':0}}};
+	let conf;
+	const useScriptDB = true, //脚本数据开关, false则使用下面的configManual作为每次打开网页的配置,功能一样,BTK的管理功能不会存储修改后的配置
+		configManual = { 'trans': true, 'search': true, 'sort': false, 'shift': 0, 'maxWidth': '520px', 'searchs': { 'dmhy': { 'display1': 'dmhy', 'display2': '动漫花园', 'url': 'http://share.dmhy.org/topics/list?keyword=%key' }, 'bili': { 'display1': 'bili', 'display2': '哔哩哔哩', 'url': 'http://search.bilibili.com/all?keyword=%key' }, 'sohu': { 'display1': 'sohu', 'display2': '搜狐专题', 'url': 'http://tv.sohu.com/%key' }, 'pptv': { 'display1': 'pptv', 'display2': '聚力专题', 'url': 'http://v.pptv.com/page/%key.html' }, 'iqyi': { 'display1': 'iqyi', 'display2': '奇艺专题', 'url': 'http://www.iqiyi.com/%key.html' }, 'letv': { 'display1': 'letv', 'display2': '乐视专题', 'url': 'http://www.letv.com/comic/%key.html' }, 'blav': { 'display1': 'blav', 'display2': '哔哩视频', 'url': 'http://www.bilibili.com/video/av%key' }, 'tudo': { 'display1': 'tudo', 'display2': '土豆专题', 'url': 'http://www.tudou.com/albumcover/%key.html' }, 'yoku': { 'display1': 'yoku', 'display2': '优酷专题', 'url': 'http://www.youku.com/show_page/id_%key.html' }, 'acab': { 'display1': 'acab', 'display2': '艾斯视频', 'url': 'http://www.acfun.tv/v/ab%key' } }, 'dicts': { '975': { 'trans': '海贼王', 'searchs': { 'dmhy': '海賊王', 'sohu': 's2013/onepiece' }, 'shift': 0 } } };
 
-	var saveConfig = function() {
-		var strConfig = JSON.stringify(conf, function(key, value) {
-			return key!='sorter' ? value : undefined;
+	const saveConfig = function() {
+		const strConfig = JSON.stringify(conf, function(key, value) {
+			return key != 'sorter' ? value : undefined;
 		});
 
 		if(useScriptDB) GM_setValue('btk-config', strConfig);
@@ -37,8 +38,8 @@
 
 		if(!conf)
 			conf = {
-				'trans':true, 'search':true, 'sort':true,
-				'shift':0, 'maxWidth':'520px',
+				'trans': true, 'search': true, 'sort': true,
+				'shift': 0, 'maxWidth': '520px',
 				'searchs': {}, 'dicts': {}
 			};
 		else
@@ -81,7 +82,7 @@
 			'.replace(/\t/g, '')
 		);
 
-		var panel = $('<div class="halfPage sort ui-draggable btk-config">').hide();
+		const panel = $('<div class="halfPage sort ui-draggable btk-config">').hide();
 		panel.append($('<div class="sidePanelHome">')
 			.append($('<h2 class="subtitle">Bangumi Tookit</h2>')).append($('<ul class="btk-ul">')))
 			.prependTo($('div.sideInner'));
@@ -89,8 +90,8 @@
 		$('div.content>ul.clearit>:nth-child(2)>:nth-child(2)').after($('<a class="btk-panel">工具</a>')
 			.click(function() { panel.slideToggle(); })).after($(document.createTextNode(' | ')));
 
-		var toggleFunc = function(which, type) {
-			var $this = $(which);
+		const toggleFunc = function(which, type) {
+			const $this = $(which);
 
 			if($this.hasClass('btk-on'))
 				conf[type] = false;
@@ -104,16 +105,16 @@
 			refresher[type]();
 		};
 
-		var a1 = $('<a class="btk-button">中日切换</a>').addClass(conf.trans?'btk-on':'btk-off')
+		const a1 = $('<a class="btk-button">中日切换</a>').addClass(conf.trans ? 'btk-on' : 'btk-off')
 			.click(function() { toggleFunc(this, 'trans'); });
 
-		var a2 = a1.clone().html('搜索链接').addClass(conf.search?'btk-on':'btk-off')
-			.removeClass(conf.search?'btk-off':'btk-on').click(function() { toggleFunc(this, 'search'); });
+		const a2 = a1.clone().html('搜索链接').addClass(conf.search ? 'btk-on' : 'btk-off')
+			.removeClass(conf.search ? 'btk-off' : 'btk-on').click(function() { toggleFunc(this, 'search'); });
 
-		var a3 = a1.clone().html('播出排序').addClass(conf.sort?'btk-on':'btk-off')
-			.removeClass(conf.sort?'btk-off':'btk-on').click(function() { toggleFunc(this, 'sort'); });
+		const a3 = a1.clone().html('播出排序').addClass(conf.sort ? 'btk-on' : 'btk-off')
+			.removeClass(conf.sort ? 'btk-off' : 'btk-on').click(function() { toggleFunc(this, 'sort'); });
 
-		var a4 = a1.clone().html('导入配置').addClass('btk-on').removeClass('btk-off').click(function() {
+		const a4 = a1.clone().html('导入配置').addClass('btk-on').removeClass('btk-off').click(function() {
 			if(confirm('确定要导入! 导入! 导入默认配置吗??\r\n这将会覆盖! 覆盖! 覆盖现有配置!!')) {
 				conf = configManual;
 				saveConfig();
@@ -125,59 +126,59 @@
 
 				i1.val(conf.shift);
 
-				var mask = $('.btk-mask');
+				const mask = $('.btk-mask');
 				if(mask.children().length)
 					refreshMask();
 
 				alert('导入成功');
 			}
 		});
-	//UI-配置条目
-		var refreshSeacher = function(seacher, searchs) {
+		//UI-配置条目
+		const refreshSeacher = function(seacher, searchs) {
 			seacher.empty().append($('<option>').val('_new'));
-			for (var key in conf.searchs) {
-				var search = conf.searchs[key];
+			for(const key in conf.searchs) {
+				const search = conf.searchs[key];
 
-				seacher.append($('<option>').html(search.display2+'('+search.display1+')'+
-					(searchs && searchs[search.display1]?'*':'')).val(key));
+				seacher.append($('<option>').html(search.display2 + '(' + search.display1 + ')' +
+					(searchs && searchs[search.display1] ? '*' : '')).val(key));
 			}
 
 			return seacher;
 		};
 
-		var refreshMask = function() {
-		//UI-遮罩条目
-			var wrapper = $('.infoWrapper_tv');
-			var mask = $('.btk-mask').empty();
+		const refreshMask = function() {
+			//UI-遮罩条目
+			const wrapper = $('.infoWrapper_tv');
+			let mask = $('.btk-mask').empty();
 
 			if(!mask.length)
 				mask = $('<div class="btk-mask">').width(wrapper.width()).height(wrapper.height()).insertAfter(wrapper);
 
-			var last;
+			let last;
 			wrapper.find('[id*="subjectPanel_"]').each(function(index, subject) {
 				subject = $(subject);
-				var id = subject.attr('id').replace('subjectPanel_', '');
+				const id = subject.attr('id').replace('subjectPanel_', '');
 
-				var select = $('<div class="btk-select">').addClass(conf.dicts[id]?'btk-exist':null)
-					.addClass(index % 2?'even':'odd').height(subject.height()).width(subject.width())
+				const select = $('<div class="btk-select">').addClass(conf.dicts[id] ? 'btk-exist' : null)
+					.addClass(index % 2 ? 'even' : 'odd').height(subject.height()).width(subject.width())
 					.append($('<div class="btk-border">')).attr('data-id', id);
 
-				select[last?'insertAfter':'appendTo'](last?last:mask);
+				select[last ? 'insertAfter' : 'appendTo'](last ? last : mask);
 
 				last = select;
 
 				select.click(function() {
-					var $this = $(this);
-					var id = $this.attr('data-id');
-					var dict = conf.dicts[id];
-					var subject = wrapper.find('[id=subjectPanel_'+id+']');
+					const $this = $(this);
+					const id = $this.attr('data-id');
+					let dict = conf.dicts[id];
+					const subject = wrapper.find('[id=subjectPanel_' + id + ']');
 
 					if(!dict)
 						dict = {};
 
 					configer.id.html(id);
 					configer.original.val(subject.find('.header>a').attr('title'));
-					configer.trans.val(dict.trans?dict.trans:'');
+					configer.trans.val(dict.trans ? dict.trans : '');
 
 					if('number' == typeof dict.shift) {
 						configer.shift.val(dict.shift);
@@ -186,7 +187,7 @@
 					else
 						configer.shift.val('');
 
-					refreshSeacher(configer.search, conf.dicts[id]?conf.dicts[id].searchs:null);
+					refreshSeacher(configer.search, conf.dicts[id] ? conf.dicts[id].searchs : null);
 				});
 
 			});
@@ -194,23 +195,23 @@
 			return mask;
 		};
 
-		var a5 = a1.clone().html('管理条目').addClass('btk-off').removeClass('btk-on')
+		const a5 = a1.clone().html('管理条目').addClass('btk-off').removeClass('btk-on')
 			.click(function() {
-				var $this = $(this);
-				refreshMask()[$this.hasClass('btk-on')?'fadeOut':'fadeIn']();
+				const $this = $(this);
+				refreshMask()[$this.hasClass('btk-on') ? 'fadeOut' : 'fadeIn']();
 
 				$('.btk-configer').slideToggle();
 
 				$this.toggleClass('btk-on').toggleClass('btk-off');
 			});
 
-		var a51 = a1.clone().html('保存条目').addClass('btk-on').removeClass('btk-off')
+		const a51 = a1.clone().html('保存条目').addClass('btk-on').removeClass('btk-off')
 			.click(function() {
-				var dict = conf.dicts[configer.id.html()];
+				let dict = conf.dicts[configer.id.html()];
 
 				if(!dict) dict = {};
 
-				var reg = /(^\s*)|(\s*$)/g;
+				const reg = /(^\s*)|(\s*$)/g;
 
 				if(configer.trans.val().replace(reg, ''))
 					dict.trans = configer.trans.val();
@@ -246,16 +247,16 @@
 				refresher.shift();
 				refresher.sort();
 
-				var mask = $('.btk-mask');
+				const mask = $('.btk-mask');
 				if(mask.children().length)
 					refreshMask();
 
-				refreshSeacher(configer.search, conf.dicts[configer.id.html()]?conf.dicts[configer.id.html()].searchs:null);
+				refreshSeacher(configer.search, conf.dicts[configer.id.html()] ? conf.dicts[configer.id.html()].searchs : null);
 
 				alert('保存成功');
 			});
 
-		var a52 = a1.clone().html('删除条目').addClass('btk-on').removeClass('btk-off')
+		const a52 = a1.clone().html('删除条目').addClass('btk-on').removeClass('btk-off')
 			.click(function() {
 				if(configer.id.html() && confirm('确定要删除! 删除! 删除该条目吗??')) {
 					delete conf.dicts[configer.id.html()];
@@ -266,24 +267,24 @@
 					refresher.shift();
 					refresher.sort();
 
-					var mask = $('.btk-mask');
+					const mask = $('.btk-mask');
 					if(mask.children().length)
 						refreshMask();
 
-					refreshSeacher(configer.search, conf.dicts[configer.id.html()]?conf.dicts[configer.id.html()].searchs:null);
+					refreshSeacher(configer.search, conf.dicts[configer.id.html()] ? conf.dicts[configer.id.html()].searchs : null);
 				}
 			});
 
-		var configer = {
-			id:$('<b>'),
-			original:$('<input class="btk-text2 btk-button btk-input">').attr('disabled', 'disabled'),
-			trans:$('<input class="btk-text2 btk-button btk-input">'),
-			shift:$('<input class="btk-text btk-button btk-input">'),
-			search:refreshSeacher($('<select class="btk-selector btk-button">')),
-			key:$('<input class="btk-text2 btk-button btk-input" style="margin-bottom:7px;">'),
+		const configer = {
+			id: $('<b>'),
+			original: $('<input class="btk-text2 btk-button btk-input">').attr('disabled', 'disabled'),
+			trans: $('<input class="btk-text2 btk-button btk-input">'),
+			shift: $('<input class="btk-text btk-button btk-input">'),
+			search: refreshSeacher($('<select class="btk-selector btk-button">')),
+			key: $('<input class="btk-text2 btk-button btk-input" style="margin-bottom:7px;">'),
 		};
 
-		var keyHolder2 = '';
+		let keyHolder2 = '';
 		configer.shift.bind('input', function() {
 			if((!/^-?\d{1,2}$/.test(this.value) || /^-?0\d+$/.test(this.value)) && this.value != '-' && this.value != '')
 				this.value = keyHolder2;
@@ -291,7 +292,7 @@
 				keyHolder2 = this.value;
 		});
 
-		var panelSubject = $('<div class="btk-configer">').hide()
+		const panelSubject = $('<div class="btk-configer">').hide()
 			.append($('<text>条目信息 (ID:</text>').append(configer.id).append(')')).append('<br>')
 			.append('<text>条目名称:</text>').append(configer.original).append('<br>')
 			.append('<text>中文名称:</text>').append(configer.trans).append('<br>')
@@ -301,30 +302,30 @@
 			.append(a51).append(a52).append('<br>');
 
 		configer.search.change(function() {
-			var $this = $(this);
-			var id = configer.id.html();
+			const $this = $(this);
+			const id = configer.id.html();
 
-			var key = conf.dicts[id]?(conf.dicts[id].searchs?conf.dicts[id].searchs[$this.val()]:null):null;
+			const key = conf.dicts[id] ? (conf.dicts[id].searchs ? conf.dicts[id].searchs[$this.val()] : null) : null;
 
-			configer.key.val(key?key:'');
+			configer.key.val(key ? key : '');
 		});
-	//UI-配置链接
-		var a6 = a1.clone().html('配置链接').addClass('btk-off').removeClass('btk-on')
+		//UI-配置链接
+		const a6 = a1.clone().html('配置链接').addClass('btk-off').removeClass('btk-on')
 			.click(function() {
 				$('.btk-searcher').slideToggle();
 
 				$(this).toggleClass('btk-on').toggleClass('btk-off');
 			});
 
-		var a61 = a1.clone().html('保存链接').addClass('btk-on').removeClass('btk-off')
+		const a61 = a1.clone().html('保存链接').addClass('btk-on').removeClass('btk-off')
 			.click(function() {
-				var val = searcher.select.val();
-				var display1 = searcher.display1.val();
+				const val = searcher.select.val();
+				const display1 = searcher.display1.val();
 
-				conf.searchs[(val == '_new'?display1:val)] = {
-					display1:display1,
-					display2:searcher.display2.val(),
-					url:searcher.url.val()
+				conf.searchs[(val == '_new' ? display1 : val)] = {
+					display1: display1,
+					display2: searcher.display2.val(),
+					url: searcher.url.val()
 				};
 				saveConfig();
 				refreshSeacher(searcher.select);
@@ -332,9 +333,9 @@
 				alert('保存成功');
 			});
 
-		var a62 = a1.clone().html('删除链接').addClass('btk-on').removeClass('btk-off')
+		const a62 = a1.clone().html('删除链接').addClass('btk-on').removeClass('btk-off')
 			.click(function() {
-				var val = searcher.select.val();
+				const val = searcher.select.val();
 				if(val != '_new' && confirm('确定要删除 删除 删除吗?')) {
 					delete conf.searchs[searcher.display1.val()];
 					saveConfig();
@@ -343,25 +344,25 @@
 				}
 			});
 
-		var searcher = {
-			select:$('<select class="btk-selector btk-button">'),
-			display1:$('<input class="btk-text3 btk-button btk-input">'),
-			display2:$('<input class="btk-text3 btk-button btk-input">'),
-			url:$('<input class="btk-text2 btk-button btk-input" style="margin-bottom:7px;">')
+		const searcher = {
+			select: $('<select class="btk-selector btk-button">'),
+			display1: $('<input class="btk-text3 btk-button btk-input">'),
+			display2: $('<input class="btk-text3 btk-button btk-input">'),
+			url: $('<input class="btk-text2 btk-button btk-input" style="margin-bottom:7px;">')
 		};
 
 		refreshSeacher(searcher.select);
 
 		searcher.select.change(function() {
-			var val = $(this).val();
-			var search = conf.searchs[val]?conf.searchs[val]: {};
+			const val = $(this).val();
+			const search = conf.searchs[val] ? conf.searchs[val] : {};
 
 			searcher.display1.val(search.display1);
 			searcher.display2.val(search.display2);
 			searcher.url.val(search.url);
 		});
 
-		var panelSearcher = $('<div class="btk-searcher">').hide()
+		const panelSearcher = $('<div class="btk-searcher">').hide()
 			.append('<text>名称都建议是4个字(母). URL通配符是%key</text>').append('<br>')
 			.append('<text>链接:</text>').append(searcher.select).append('<br>')
 			.append('<text>缩写:</text>').append(searcher.display1)
@@ -369,10 +370,10 @@
 			.append('<text>URL:</text>').append(searcher.url).append('<br>')
 			.append(a61).append(a62);
 
-		var keyHolder = conf.shift;
-		var i1 = $('<input class="btk-text btk-button btk-input">').val(conf.shift)
+		let keyHolder = conf.shift;
+		const i1 = $('<input class="btk-text btk-button btk-input">').val(conf.shift)
 			.keyup(function(e) {
-				if(this.value!='-' && this.value!='' && (e.keyCode == 13 || e.keyCode == 108))
+				if(this.value != '-' && this.value != '' && (e.keyCode == 13 || e.keyCode == 108))
 					refresher.shift(this.value);
 			})
 			.bind('input', function() {
@@ -386,52 +387,52 @@
 			.append($('<li>').append('<text>默认偏移</text>').append(i1).append('<text>天</text>').append(a6).append(a5))
 			.append($('<li>').append(panelSearcher))
 			.append($('<li>').append(panelSubject));
-	//切换器
-		var toggler = {
-			trans:function(id, subject, newName) {
+		//切换器
+		const toggler = {
+			trans: function(id, subject, newName) {
 				if(!conf.trans)
 					newName = subject.find('.header>a').attr('title');
 
 				subject.find('.epGird>.tinyHeader>a[href*="/subject/"][title]').html(newName);
 				subject.find('.header.clearit>.headerInner>h3>.l').html(newName);
-				$('a.subjectItem.title[subject_id="'+id+'"]>span').html(newName);
+				$('a.subjectItem.title[subject_id="' + id + '"]>span').html(newName);
 			},
-			search:function(subject, searchs) {
+			search: function(subject, searchs) {
 				if(!searchs) {
-					var alinks = subject.find('a.btk-search');
-					var temp = alinks.parent();
+					const alinks = subject.find('a.btk-search');
+					const temp = alinks.parent();
 
 					alinks.remove();
 					temp.each(function(index, parent) {
-						var innerHTML = parent.innerHTML;
-						while(innerHTML.lastIndexOf(' | ') == (innerHTML.length-3))
-							innerHTML = innerHTML.substring(0, innerHTML.length-3);
+						let innerHTML = parent.innerHTML;
+						while(innerHTML.lastIndexOf(' | ') == (innerHTML.length - 3))
+							innerHTML = innerHTML.substring(0, innerHTML.length - 3);
 						parent.innerHTML = innerHTML;
 					});
 				}
 				else
-					for(var type in searchs) {
-						var raw = type=='page'?searchs.page:conf.searchs[type];
+					for(const type in searchs) {
+						const raw = type == 'page' ? searchs.page : conf.searchs[type];
 
 						if(!raw) continue;
 
-						var a1 = $('<a class="btk-search">')
-							.attr('href', type=='page'?raw.url:raw.url.replace('%key', encodeURI(searchs[type])));
-						a1.html(raw.display1).addClass('l').attr('target','_blank');
+						const a1 = $('<a class="btk-search">')
+							.attr('href', type == 'page' ? raw.url : raw.url.replace('%key', encodeURI(searchs[type])));
+						a1.html(raw.display1).addClass('l').attr('target', '_blank');
 
 						subject.find('.epGird>.tinyHeader').append(' | ').append(a1);
 
 						subject.find('.header>.headerInner>.tip_i').append(' | ').append(a1.clone().html(raw.display2));
 					}
 			},
-			shift:function(subject, shift) {
+			shift: function(subject, shift) {
 				subject.find('.epGird>ul>li>a[class*="Today"], a[class*=Air]')
-				.removeClass('epBtnToday').removeClass('epBtnAir').addClass('epBtnNA');
+					.removeClass('epBtnToday').removeClass('epBtnAir').addClass('epBtnNA');
 
 				subject.find('.epGird>ul>li>a.epBtnNA').each(function(index, ep) {
 					ep = $(ep);
-					var date = $(ep.attr('rel')+'>.tip').html().match(/\d+-\d+-\d+/);
-					var day = (Date.parse(date?date[0]:'') - 28800000 - now) / 86400000;
+					const date = $(ep.attr('rel') + '>.tip').html().match(/\d+-\d+-\d+/);
+					const day = (Date.parse(date ? date[0] : '') - 28800000 - now) / 86400000;
 
 					if(day == shift)
 						ep.removeClass('epBtnNA').addClass('epBtnToday');
@@ -441,20 +442,20 @@
 			}
 		};
 
-		var refresher = {
-			trans:function() {
+		const refresher = {
+			trans: function() {
 				$('.infoWrapper_tv>[id*="subjectPanel_"]').each(function(id, subject) {
 					subject = $(subject);
 					id = subject.attr('id').replace('subjectPanel_', '');
-					var dict = conf.dicts[id];
+					const dict = conf.dicts[id];
 
-					toggler.trans(id, subject, dict && dict.trans?dict.trans:subject.find('.header>a').attr('title'));
+					toggler.trans(id, subject, dict && dict.trans ? dict.trans : subject.find('.header>a').attr('title'));
 				});
 			},
-			search:function() {
+			search: function() {
 				$('.infoWrapper_tv>[id*="subjectPanel_"]').each(function(id, subject) {
 					subject = $(subject);
-					var dict = conf.dicts[subject.attr('id').replace('subjectPanel_', '')];
+					const dict = conf.dicts[subject.attr('id').replace('subjectPanel_', '')];
 
 					if(conf.search && dict && dict.searchs) {
 						toggler.search(subject, null);
@@ -464,18 +465,18 @@
 						toggler.search(subject, null);
 				});
 			},
-			shift:function(newShift) {
+			shift: function(newShift) {
 				if(newShift != null && newShift != undefined)
 					conf.shift = parseInt(newShift);
 
 				$('.infoWrapper_tv>[id*="subjectPanel_"]').each(function(id, subject) {
 					subject = $(subject);
-					var dict = dicts[subject.attr('id').replace('subjectPanel_', '')];
+					const dict = dicts[subject.attr('id').replace('subjectPanel_', '')];
 
-					var shift;
-					if(dict && ('number'==typeof dict.shift))
+					let shift;
+					if(dict && ('number' == typeof dict.shift))
 						shift = dict.shift;
-					else if(('number'==typeof conf.shift))
+					else if(('number' == typeof conf.shift))
 						shift = conf.shift;
 
 					if('number' == typeof shift)
@@ -484,8 +485,8 @@
 
 				refresher.sort();
 			},
-			sort:function() {
-				var wrapper = $('.infoWrapper_tv');
+			sort: function() {
+				const wrapper = $('.infoWrapper_tv');
 
 				if(conf.sort) {
 					wrapper.find('[id*="subjectPanel_"]').each(function(index, subject) {
@@ -497,23 +498,23 @@
 					});
 				}
 				else if(conf.sorter)
-					for(var i=0; i<conf.sorter.length; i++)
+					for(let i = 0; i < conf.sorter.length; i++)
 						wrapper.append(conf.sorter[i]);
 
 				wrapper.find('[id*="subjectPanel_"]').each(function(index, subject) {
-					$(subject).removeClass(index % 2?'odd':'even').addClass(index % 2?'even':'odd');
+					$(subject).removeClass(index % 2 ? 'odd' : 'even').addClass(index % 2 ? 'even' : 'odd');
 				});
 			}
 		};
 
-		var dicts = conf.dicts;
-		var now = Date.parse(new Date().toDateString());
-		var wrapper = $('.infoWrapper_tv');
+		const dicts = conf.dicts;
+		const now = Date.parse(new Date().toDateString());
+		const wrapper = $('.infoWrapper_tv');
 
 		wrapper.find('[id*="subjectPanel_"]').each(function(id, subject) {
 			subject = $(subject);
 			id = subject.attr('id').replace('subjectPanel_', '');
-			var dict = dicts[id];
+			const dict = dicts[id];
 
 			if(conf.trans && dict && dict.trans)
 				toggler.trans(id, subject, dict.trans);
@@ -521,10 +522,10 @@
 			if(conf.search && dict && dict.searchs)
 				toggler.search(subject, dict.searchs);
 
-			var shift;
-			if(dict && ('number'==typeof dict.shift))
+			let shift;
+			if(dict && ('number' == typeof dict.shift))
 				shift = dict.shift;
-			else if(('number'==typeof conf.shift))
+			else if(('number' == typeof conf.shift))
 				shift = conf.shift;
 
 			if('number' == typeof shift && shift != 1)

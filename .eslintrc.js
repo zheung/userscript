@@ -1,3 +1,5 @@
+/* global module */
+
 const rcBrowser = {
 	root: true,
 	env: { es2021: true, browser: true, greasemonkey: true },

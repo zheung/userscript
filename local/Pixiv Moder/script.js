@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pixiv Moder
 // @description  新窗口Pixiv
-// @version      0.3.1701271
+// @version      0.3.1-2021.11.22.01
 // @author       DanoR
 // @namespace    http://weibo.com/zheung
 // @grant        none
@@ -9,11 +9,12 @@
 // ==/UserScript==
 
 if(self == top) {
-	var qs = function(selector) { return document.querySelector(selector); },
+	const qs = function(selector) { return document.querySelector(selector); },
 		qsa = function(selector) {
-			var result = [], arr = document.querySelectorAll(selector), i;
+			const result = [], arr = document.querySelectorAll(selector);
+			let i;
 
-			for(i=0; i<arr.length; i++) result.push(arr[i]);
+			for(i = 0; i < arr.length; i++) result.push(arr[i]);
 			return result;
 		};
 
@@ -27,8 +28,9 @@ if(self == top) {
 		(function() {
 			console.log('pm', 1, 'work');
 
-			var itr = setInterval(function() {
-				var aw = qsa('a.work'), i;
+			const itr = setInterval(function() {
+				const aw = qsa('a.work');
+				let i;
 
 				if(!aw.length && !!qs('section#illust-recommend')) {
 					console.log('pm', 1, 'nope');
@@ -53,8 +55,9 @@ if(self == top) {
 		(function() {
 			console.log('pm', 2, 'work');
 
-			var itr = setInterval(function() {
-				var awm = qsa('a.work.multiple'), i;
+			const itr = setInterval(function() {
+				const awm = qsa('a.work.multiple');
+				let i;
 
 				if(!awm.length) return;
 
@@ -74,12 +77,12 @@ if(self == top) {
 		(function() {
 			console.log('pm', 3, 'work');
 
-			var itr = setInterval(function() {
-				var dwdd = qs('div.works_display>div'),
+			const itr = setInterval(function() {
+				const dwdd = qs('div.works_display>div'),
 					umcb = qs('.ui-modal-close-box'),
 					iori = qs('img.original-image');
 
-				if(!!(qs('canvas') || qs('a._work.multiple'))) { console.log('pm', 3, 'nope'); clearInterval(itr); }
+				if(qs('canvas') || qs('a._work.multiple')) { console.log('pm', 3, 'nope'); clearInterval(itr); }
 				if(!dwdd || !umcb || !iori) return;
 
 				dwdd.click();

@@ -47,7 +47,7 @@ let dictTrans = {
 	'': {
 		'': '',
 	},
-}
+};
 
 for(let xPath in dictTrans) {
 	if(!xPath) {

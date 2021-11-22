@@ -10,7 +10,7 @@
 // ==/UserScript==
 
 (function() {
-	var itr = setInterval(function() {
+	const itr = setInterval(function() {
 		if(document.querySelector('b.icon.tosign.done'))
 			clearInterval(itr);
 		else

@@ -11,15 +11,15 @@
 (function() {
 	document.querySelector('.jmd').style.display = 'none';
 
-	var jmd_base = document.querySelector('.jmd_base');
+	const jmd_base = document.querySelector('.jmd_base');
 
 	jmd_base.removeAttribute('style');
 	jmd_base.className += ' jmd';
 
-	var tr = jmd_base.querySelectorAll('tbody>tr');
+	const tr = jmd_base.querySelectorAll('tbody>tr');
 
 	tr[new Date().getDay()].className += 'today ';
 
-	for(var i=0; i<tr.length; i++)
-		tr[i].className += (i % 2 == 1?'even':'odd');
+	for(let i = 0; i < tr.length; i++)
+		tr[i].className += (i % 2 == 1 ? 'even' : 'odd');
 })();
