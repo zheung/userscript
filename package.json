@@ -1,9 +1,9 @@
 {
-	"name": "uscript",
+	"name": "userscript",
 	"version": "1.0.0",
-	"description": "Nuogz Userscripts",
+	"description": "",
 	"author": "Nuogz",
 	"devDependencies": {
-		"eslint": "^7.29.0"
+		"eslint": "^8.3.0"
 	}
 }

@@ -1,34 +1,24 @@
-const rc = {
-	env: {
-		es2020: true,
-		browser: true,
-		greasemonkey: true
-	},
-	extends: [
-		'eslint:recommended',
-	],
+const rcBrowser = {
+	root: true,
+	env: { es2021: true, browser: true, greasemonkey: true },
+	extends: ['eslint:recommended'],
+	parserOptions: { sourceType: 'script', ecmaVersion: 13 },
 	rules: {
 		indent: [2, 'tab', { ignoreComments: true, SwitchCase: 1 }],
-		linebreakStyle: [2, 'unix'],
+		linebreakStyle: [2],
 		quotes: [2, 'single', { allowTemplateLiterals: true }],
-		semi: [2, 'always'],
-		noUnusedVars: [2, { vars: 'all', args: 'after-used' }],
-		noConsole: [0],
+		semi: [2],
+		noUnusedVars: [2, { vars: 'all', args: 'none' }],
 		noVar: [2],
-		quoteProps: [2, 'as-needed'],
-		requireAtomicUpdates: [0],
+		noConsole: [0],
+		requireAtomicUpdates: [1],
 	},
-	globals: {}
+	overrides: []
 };
 
-for(const key in rc.rules) {
-	const keyCamel = key.split(/(?=[A-Z])/).join('-').toLowerCase();
-	if(keyCamel != key) {
-		rc.rules[keyCamel] = rc.rules[key];
 
-		delete rc.rules[key];
-	}
-}
+const parseKey = (raw, target) => { const key = raw.split(/(?=[A-Z])/).join('-').toLowerCase(); if(key != raw) { target[key] = target[raw]; delete target[raw]; } };
+Object.keys(rcBrowser.rules).forEach(key => parseKey(key, rcBrowser.rules));
 
-// eslint-disable-next-line no-undef
-module.exports = rc;
+
+module.exports = rcBrowser;
