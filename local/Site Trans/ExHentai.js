@@ -31,6 +31,7 @@ full color:全彩
 mosaic censorship:马赛克修正
 multi-work series:多卷连载
 non-nude:无裸体
+variant set:差分合集
 
 ## 表现手法
 x-ray:透视
@@ -71,6 +72,7 @@ nakadashi:中出
 sleeping:睡奸
 large insertions:扩张插入
 double penetration:双重插入
+urethra insertion:尿道插入
 
 bestiality:兽交
 low bestiality:轻度兽交
@@ -82,7 +84,7 @@ anal birth:肛交产出
 scat:排粪
 eggs:产卵
 urination:放尿
-
+farting:放屁
 
 # 关系
 femdom:女主调教
@@ -150,6 +152,7 @@ dark sclera:黑眼膜
 onahole:人工阴道
 unusual pupils:奇怪的瞳孔
 beauty mark:美人痣
+hairy:阴毛
 
 ## 着装
 masked face:蒙面
@@ -175,6 +178,7 @@ corset:塑腰
 eyemask:眼罩
 eyepatch:单眼带
 thigh high boots:过膝靴
+chastity belt:贞操带
 
 ## 角色
 maid:女仆
@@ -235,6 +239,7 @@ petrification:石化
 amputee:截肢
 tanlines:晒痕
 crotch tattoo:淫纹
+smell:剧臭
 
 ## 性格
 bisexual:双性恋
