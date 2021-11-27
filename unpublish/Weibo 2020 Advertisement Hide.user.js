@@ -54,7 +54,7 @@ const observer = new MutationObserver(() => {
 	else {
 		observer.disconnect();
 
-		LE('非2020 新版微博，退出脚本');
+		LE('非2020新版微博，退出脚本');
 	}
 });
 

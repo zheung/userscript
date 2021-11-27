@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Weibo 2020 Media Download
 // @namespace https://danor.app/
-// @version   1.0.2-2021.07.18.01
+// @version   1.4.0-2021.11.28.01
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -11,6 +11,13 @@
 // @include   *weibo.com/*
 // ==/UserScript==
 /* global Notyf */
+
+const L = (...args) => console.log(GM_info.script.name, GM_info.script.version, ...args);
+const LE = (...args) => console.error(GM_info.script.name, GM_info.script.version, ...args);
+const QS = (selector, el = document) => el.querySelector(selector);
+const QA = (selector, el = document) => [...el.querySelectorAll(selector)];
+
+const parseURLName = str => str.split('/').pop();
 
 GM_addStyle(GM_getResourceText('notyf_css'));
 GM_addStyle(`
@@ -69,6 +76,8 @@ GM_addStyle(`
 		background: rgba(0, 0, 0, 0.7);
 		user-select: none;
 		cursor: pointer;
+		font-size: 11px;
+		padding: 1px;
 	}
 	.nz-wmd-button._search {
 		top: 19px;
@@ -77,9 +86,12 @@ GM_addStyle(`
 	.nz-wmd-button:hover {
 		color: white;
 	}
+	.nz-dbox-title {
+		cursor: pointer;
+	}
 `);
 
-const renderSize = function(value) {
+const renderSize = value => {
 	value = parseFloat(value);
 	const index = Math.floor(Math.log(value) / Math.log(1024));
 
@@ -105,26 +117,29 @@ const domTextDBox = `
 `;
 const openDBox = text => {
 	const random = (Math.random() * 1000).toFixed(0);
+
 	const noty = notyf.open({
 		type: 'tmd',
-		message: `<div id="nz-dbox-${random}"><div class="title">${text} Fetching...</div><div class="down"></div></div>`
+		message: `<div id="nz-dbox-${random}"><div class="nz-dbox-title" title="点击关闭">${text} Fetching...</div><div class="down"></div></div>`
 	});
 
-	const dbox = document.querySelector(`#nz-dbox-${random}`);
-	const boxTitle = dbox.querySelector('.title');
-	const boxDown = dbox.querySelector('.down');
+	const dbox = QS(`#nz-dbox-${random}`);
+	const boxTitle = QS('.nz-dbox-title', dbox);
+	const boxDown = QS('.down', dbox);
 
 	const initer = (text, count) => {
 		dbox.title = text;
 		boxTitle.innerHTML = boxTitle.innerHTML.replace(' Fetching...', '');
 		boxDown.innerHTML = domTextDBox.repeat(count);
 
-		const progs = dbox.querySelectorAll('progress');
-		const textsProg = dbox.querySelectorAll('.prog');
-		const textsInfo = dbox.querySelectorAll('.info');
+		const progs = QA('progress', dbox);
+		const textsProg = QA('.prog', dbox);
+		const textsInfo = QA('.info', dbox);
 
 		return { progs, textsProg, textsInfo, };
 	};
+
+	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
 
 	return { noty, initer };
 };
@@ -149,7 +164,7 @@ const downloadMedia = async (url, nameSave, prog, textProg, textLine) => {
 			sizeLoaded += value.length;
 
 			textProg.innerHTML = `
-				<div class="inline" style="width: 40px">${textLine}: </div>
+				<div class="inline" style="width: 40px">${textLine} </div>
 				<div class="inline" style="width: 90px">[${renderSize(sizeTotal)}]</div>
 				<div class="inline" style="width: 70px">${(sizeLoaded * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%</div>
 			`.replace(/\t|\n/g, '');
@@ -163,84 +178,137 @@ const downloadMedia = async (url, nameSave, prog, textProg, textLine) => {
 
 	const a = document.createElement('a');
 	a.classList.add('inline', 'save');
-	a.innerHTML = 'Save';
+	a.innerHTML = '保存';
 	a.download = nameSave;
 	a.href = URL.createObjectURL(new Blob([datasMedia]));
 	textProg.parentNode.insertBefore(a, textProg.nextElementSibling.nextElementSibling);
 	a.click();
 
-	console.log(`Saved: ${a.download}`);
+	L(`已保存: ${a.download}`);
 
 	return datasMedia;
 };
 
 
-const downloadPictures = async function(toolbar) {
-	const feed = [...document.querySelectorAll('[class*=Feed_wrap_]')]
-		.find(feed => feed.contains(toolbar))
-		.querySelector('[class*=Feed_body_]');
+const downloadPictures = async toolbar => {
+	const feed = QS('[class*=Feed_body_]', QA('[class*=Feed_wrap_]').find(feed => feed.contains(toolbar)));
 
-	const partsURLWeibo = feed.querySelector('a[title]').href.split('/');
+	const partsURLWeibo = QA('a[title]', feed).pop().href.split('/');
 	const idWeibo = partsURLWeibo.pop();
-	const idUser = partsURLWeibo.pop();
 
-	const elsImage = [...feed.querySelectorAll('img.woo-picture-img, img[class*=picture_focusImg_]')];
+
+	const weibo = await (await fetch(`https://weibo.com/ajax/statuses/show?id=${idWeibo}`)).json();
+	// 历史编辑记录https://weibo.com/ajax/statuses/editHistory?mid=4694110357689194&page=1
+
+
+	let hasMedia = false;
+
+	const imagesRaw = Object.values(weibo?.pic_infos ?? {});
+	if(imagesRaw.length) { hasMedia = true; }
+
+	const videosRaw = weibo?.page_info?.media_info?.playback_list ?? [];
+	if(videosRaw.length) { hasMedia = true; }
+
+	if(!hasMedia) { return LE(`微博[${idWeibo}]没有任何媒体`); }
+
+
+	const idUser = weibo?.user?.id;
+
+	const medias = [];
+	imagesRaw.forEach((media, index_) => {
+		const index = index_ + 1;
+
+		medias.push({
+			show: `P${index}`,
+			url: media.largest.url,
+			nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${parseURLName(new URL(media.largest.url).pathname)}`,
+		});
+
+		if(media.video) {
+			medias.push({
+				show: `L${index}`,
+				url: media.video,
+				nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${parseURLName(new URL(new URL(media.video).searchParams.get('livephoto')).pathname)}`,
+			});
+		}
+	});
+
+	videosRaw.sort((a, b) => a?.meta?.quality_index > b?.meta?.quality_index);
+	const urlVideo = videosRaw[0]?.play_info?.url;
+	if(urlVideo) {
+		medias.push({
+			show: 'V1',
+			url: urlVideo,
+			nameFile: `Weibo@${idUser}@${idWeibo}@1@${parseURLName(new URL(urlVideo).pathname)}`,
+		});
+	}
+
+
 	const { noty, initer } = openDBox(`下载 ${idUser}@${idWeibo}`);
-	const { progs, textsProg } = initer(`${idUser}@${idWeibo}`, elsImage.length);
+	const { progs, textsProg } = initer(`${idUser}@${idWeibo}`, medias.length);
 
-	let unfinish = elsImage.length;
-	elsImage.forEach(async (el, index) => {
-		const urlImage = el.src;
-		const nameFile = urlImage.split('/').pop();
-
-		await downloadMedia(
-			urlImage.replace(/\.cn\/.*?\//, '.cn/large/'),
-			`Weibo@${idUser}@${idWeibo}@${index + 1}@${nameFile}`,
-			progs[index], textsProg[index], index + 1
-		);
+	let unfinish = medias.length;
+	medias.forEach(async ({ url, nameFile, show }, index) => {
+		await downloadMedia(url, nameFile, progs[index], textsProg[index], show);
 
 		if(--unfinish == 0) { setTimeout(() => notyf.dismiss(noty), 24777); }
 	});
 };
-const downloadPicture = async function() {
-	const feed = [...document.querySelectorAll('[class*=Feed_body_]')].find(feed => feed.contains(weibo));
 
-	const partsURLWeibo = feed.querySelector('a[title]').href.split('/');
+
+let imageWeiboNow;
+const downloadPicture = async () => {
+	const feed = QA('[class*=Feed_body_]').find(feed => feed.contains(imageWeiboNow));
+
+	const partsURLWeibo = QA('a[title]', feed).pop().href.split('/');
 	const idWeibo = partsURLWeibo.pop();
 	const idUser = partsURLWeibo.pop();
 
-	const urlImage = weibo.querySelector('img.woo-picture-img, img[class*=picture_focusImg_]').src;
-	const nameFile = urlImage.split('/').pop();
+	const weibo = await (await fetch(`https://weibo.com/ajax/statuses/show?id=${idWeibo}`)).json();
+	const imagesRaw = Object.values(weibo?.pic_infos ?? {});
 
-	const weibos = [...weibo.parentNode.childNodes];
+	const index = [...imageWeiboNow.parentNode.childNodes].indexOf(imageWeiboNow) + 1;
 
-	const indexImage = weibos.indexOf(weibo) + 1;
+	const media = imagesRaw[index - 1];
+	const medias = [];
 
-	const { noty, initer } = openDBox(`下载 ${idUser}@${idWeibo} 第${indexImage}张`);
+	medias.push({
+		show: `P${index}`,
+		url: media.largest.url,
+		nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${parseURLName(new URL(media.largest.url).pathname)}`,
+	});
 
-	const { progs, textsProg } = initer(`${idUser}@${idWeibo} 第${indexImage}张`, 1);
+	if(media.video) {
+		medias.push({
+			show: `L${index}`,
+			url: media.video,
+			nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${parseURLName(new URL(new URL(media.video).searchParams.get('livephoto')).pathname)}`,
+		});
+	}
 
-	await downloadMedia(
-		urlImage.replace(/\.cn\/.*?\//, '.cn/large/'),
-		`Weibo@${idUser}@${idWeibo}@${indexImage}@${nameFile}`,
-		progs[0], textsProg[0], indexImage
-	);
+	const { noty, initer } = openDBox(`下载 ${idUser}@${idWeibo} 第${index}张`);
+	const { progs, textsProg } = initer(`${idUser}@${idWeibo}`, medias.length);
 
-	setTimeout(() => notyf.dismiss(noty), 24777);
+	let unfinish = medias.length;
+	medias.forEach(async ({ url, nameFile, show }, index) => {
+		await downloadMedia(url, nameFile, progs[index], textsProg[index], show);
+
+		if(--unfinish == 0) { setTimeout(() => notyf.dismiss(noty), 24777); }
+	});
+
 };
 
-const searchPicture = function() {
-	unsafeWindow.open(`https://simg.danor.app/${weibo.querySelector('img.woo-picture-img, img[class*=picture_focusImg_]').src.split('/').pop()}`);
+const searchPicture = () => {
+	unsafeWindow.open(`https://simg.danor.app/${parseURLName(QS('img.woo-picture-img, img[class*=picture_focusImg_]', imageWeiboNow).src)}`);
 };
 
 
-
-const initImageButton = function() {
+const initImageButton = () => {
 	const btnDown = document.createElement('div');
 	const btnSearch = document.createElement('div');
 
-	btnDown.innerHTML = 'D';
-	btnSearch.innerHTML = 'S';
+	btnDown.innerHTML = '存';
+	btnSearch.innerHTML = '救';
 
 	btnDown.classList.add('nz-wmd-button');
 	btnSearch.classList.add('nz-wmd-button', '_search');
@@ -252,29 +320,30 @@ const initImageButton = function() {
 };
 const [btnDown, btnSearch] = initImageButton();
 
-const atMouseEnterImage = function(event) {
-	weibo = event.target;
 
-	weibo.appendChild(btnDown);
-	weibo.appendChild(btnSearch);
+const atMouseEnterImage = event => {
+	imageWeiboNow = event.target;
+
+	imageWeiboNow.appendChild(btnDown);
+	imageWeiboNow.appendChild(btnSearch);
 
 	event.stopPropagation();
 };
 
 
 const elsItemPicture = new Set();
-const initElImage = function(itemPicture) {
+const initElImage = itemPicture => {
 	itemPicture.addEventListener('mouseenter', atMouseEnterImage);
 
 	elsItemPicture.add(itemPicture);
 };
 
-const initElToolbar = function(toolbar) {
+const initElToolbar = toolbar => {
 	const itemIcon = toolbar.childNodes[0].cloneNode(true);
 
-	itemIcon.querySelector('[class*=toolbar_num_]').innerHTML = '';
+	QS('[class*=toolbar_num_]', itemIcon).innerHTML = '';
 
-	const icon = itemIcon.querySelector('.woo-font');
+	const icon = QS('.woo-font', itemIcon);
 	icon.classList.remove('woo-font--retweet');
 	icon.classList.add('woo-font--download');
 	icon.title = '下载';
@@ -285,14 +354,11 @@ const initElToolbar = function(toolbar) {
 };
 
 
-let weibo;
-
-
 const observer = new MutationObserver(() => {
 	// 判断是否新版微博
-	if(document.querySelector('[class*=woo-box]')) {
+	if(QS('[class*=woo-box]')) {
 		try {
-			document.querySelectorAll('.woo-box-item-inlineBlock[class*=picture_item_]').forEach(el => {
+			QA('.woo-box-item-inlineBlock[class*=picture_item_]').forEach(el => {
 				if(!elsItemPicture.has(el)) {
 					initElImage(el);
 				}
@@ -300,14 +366,14 @@ const observer = new MutationObserver(() => {
 
 			elsItemPicture.forEach(el => { if(!document.contains(el)) { elsItemPicture.delete(el); } });
 
-			document.querySelectorAll('[class*=toolbar_main_]').forEach(el => {
-				if(!el.querySelector('.woo-font--download')) {
+			QA('[class*=toolbar_main_]').forEach(el => {
+				if(!QS('.woo-font--download', el)) {
 					initElToolbar(el);
 				}
 			});
 		}
 		catch(error) {
-			console.error(error.message, error.stack);
+			LE(error.message, error.stack);
 		}
 	}
 	else {
