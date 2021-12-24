@@ -171,22 +171,23 @@ const onClickDown = async function(event) {
 	const uid = state?.upData?.mid ?? '0';
 
 	const p = state?.p;
-	const part = state?.videoData?.pages.find(page => page.page == p)?.part;
+	const pages = state?.videoData?.pages;
+	const part = pages?.find(page => page.page == p)?.part;
 
 	const { noty, initer } = openDBox(title);
 	const { progs, textsProg, } = initer('', 2);
 
 	let unfinish = 2;
 	[
-		[video.baseUrl, `${uid}-${slot}-${title}${part ? `-p${p}-${part}` : ''}-video-${video.height}p.mp4`, `video`],
-		[audio.baseUrl, `${uid}-${slot}-${title}${part ? `-p${p}-${part}` : ''}-audio.mp4`, `audio`],
+		[video.baseUrl, `${uid}-${slot}-${title}${pages.length > 1 ? `-p${p}-${part}` : ''}-video-${video.height}p.mp4`, `video`],
+		[audio.baseUrl, `${uid}-${slot}-${title}${pages.length > 1 ? `-p${p}-${part}` : ''}-audio.mp4`, `audio`],
 	].forEach(async (infos, i) => {
 		mediasFinal[infos[2]] = await downloadMedia(infos, progs[i], textsProg[i], infos[2]);
 
 		unfinish--;
 
 		if(unfinish == 0) {
-			mixinMedia(`${uid}-${slot}-${title}${part ? `-p${p}-${part}` : ''}-${video.height}p-${video.bandwidth}.mp4`);
+			mixinMedia(`${uid}-${slot}-${title}${pages.length > 1 ? `-p${p}-${part}` : ''}-${video.height}p-${video.bandwidth}.mp4`);
 
 			setTimeout(() => notyf.dismiss(noty), 24777);
 		}
