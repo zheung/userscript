@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      BiliBili Media Download
 // @namespace https://danor.app/
-// @version   0.5.0-20210205
+// @version   0.6.0-2021.12.24.01
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -147,26 +147,6 @@ const downloadMedia = async (infos, prog, textProg, type) => {
 
 	return datasMedia;
 };
-// const downloadBAT = ({ video, audio, output, slot }) => {
-// 	const script = `
-// @echo off
-// ffmpeg -y -v quiet -i ".\\${video}" -i ".\\${audio}" -vcodec copy -acodec copy ".\\${output}"
-// echo Mixed ${output}
-
-// del ".\\${video}"
-// del ".\\${audio}"
-// echo Done
-// pause
-// del %0`.replace(/\n/g, '\r\n');
-
-// 	const a = document.createElement('a');
-// 	a.innerHTML = 'Save';
-// 	a.download = `mix ${slot}.bat`;
-// 	a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
-// 	a.click();
-
-// 	console.log(`Saved: ${a.download}`);
-// };
 
 const mediasFinal = {
 	video: null,
@@ -180,35 +160,33 @@ const onClickDown = async function(event) {
 	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
 	const audio = source.audio.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
 
-	const slot = __INITIAL_STATE__.bvid ||
+	const state = __INITIAL_STATE__;
+
+	const slot = state.bvid ||
 		location.pathname.replace(/\/$/, '')
 			.replace('/bangumi/play/', '')
 			.replace('/video/', '');
 
-	const title = __INITIAL_STATE__.h1Title ||
-		(__INITIAL_STATE__.videoData ? __INITIAL_STATE__.videoData.title : '未知标题');
-	const uid = __INITIAL_STATE__.upData ? (__INITIAL_STATE__.upData.mid || '0') : '0';
+	const title = state.h1Title ?? state?.videoData?.title ?? '未知标题';
+	const uid = state?.upData?.mid ?? '0';
+
+	const p = state?.p;
+	const part = state?.videoData?.pages.find(page => page.page == p)?.part;
 
 	const { noty, initer } = openDBox(title);
 	const { progs, textsProg, } = initer('', 2);
 
 	let unfinish = 2;
 	[
-		[video.baseUrl, `${uid}-${slot}-${title}-video-${video.height}p.mp4`, `video`],
-		[audio.baseUrl, `${uid}-${slot}-${title}-audio.mp4`, `audio`],
+		[video.baseUrl, `${uid}-${slot}-${title}${part ? `-p${p}-${part}` : ''}-video-${video.height}p.mp4`, `video`],
+		[audio.baseUrl, `${uid}-${slot}-${title}${part ? `-p${p}-${part}` : ''}-audio.mp4`, `audio`],
 	].forEach(async (infos, i) => {
 		mediasFinal[infos[2]] = await downloadMedia(infos, progs[i], textsProg[i], infos[2]);
 
 		unfinish--;
 
 		if(unfinish == 0) {
-			// downloadBAT({
-			// 	video: medias[0][1],
-			// 	audio: medias[1][1],
-			// 	output: `${uid}-${slot}-${title}-${video.height}p-${video.bandwidth}.mp4`,
-			// 	slot: `${uid}-${slot}-${title}`
-			// });
-			mixinMedia(`${uid}-${slot}-${title}-${video.height}p-${video.bandwidth}.mp4`);
+			mixinMedia(`${uid}-${slot}-${title}${part ? `-p${p}-${part}` : ''}-${video.height}p-${video.bandwidth}.mp4`);
 
 			setTimeout(() => notyf.dismiss(noty), 24777);
 		}
