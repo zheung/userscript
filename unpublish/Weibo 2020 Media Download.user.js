@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Weibo 2020 Media Download
 // @namespace https://danor.app/
-// @version   1.4.1-2021.11.29.01
+// @version   1.4.2-2021.12.28.01
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -288,10 +288,19 @@ const downloadPicture = async () => {
 	});
 
 	if(media.video) {
+		let nameFile;
+		try {
+			nameFile = parseURLName(new URL(new URL(media.video).searchParams.get('livephoto')).pathname);
+		}
+		catch(error) {
+			nameFile = parseURLName(new URL(media.video).pathname);
+		}
+
+
 		medias.push({
 			show: `L${index}`,
 			url: media.video,
-			nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${parseURLName(new URL(new URL(media.video).searchParams.get('livephoto')).pathname)}`,
+			nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${nameFile}`,
 		});
 	}
 
