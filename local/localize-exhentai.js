@@ -22,6 +22,7 @@ reclass:新分类
 # 画廊分类
 chinese:中文
 english:英文
+spanish:西班牙文
 translated:已翻译
 group:合集
 tankoubon:单行本
@@ -43,7 +44,8 @@ x-ray:透视
 pegging:逆肛交
 footjob:足交
 assjob:臀交
-anal:肛交
+anal intercourse:肛交
+anal:插肛
 blowjob:口交
 handjob:手交
 fisting:拳交
@@ -63,8 +65,10 @@ rimjob:舔肛
 kissing:接吻
 parasite:寄生
 bondage:捆绑
+electric shocks:电击
 shibari:绳艺
 sumata:素股
+wrestling:摔跤
 
 ##行为细节
 wormhole:虫洞交
@@ -195,6 +199,7 @@ minigirl:迷你娘
 angel:天使
 fairy:妖精
 zombie:僵尸
+oni:日本鬼
 
 monoeye:独眼娘
 mermaid:人鱼
