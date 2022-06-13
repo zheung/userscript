@@ -4,6 +4,6 @@
 	"description": "",
 	"author": "Nuogz",
 	"devDependencies": {
-		"eslint": "^8.9.0"
+		"eslint": "^8.17.0"
 	}
 }

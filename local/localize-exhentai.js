@@ -128,6 +128,7 @@ lactation:母乳
 
 ## 剧情物品
 blackmail:威胁信
+leash:锁
 
 
 # 角色
@@ -147,6 +148,7 @@ small breasts:贫乳
 big breasts:巨乳
 huge breasts:豪乳
 gigantic breasts:爆乳
+big areolae:巨乳晕
 wings:翅膀
 tail:尾巴
 kemonomimi:兽耳
@@ -174,15 +176,20 @@ swimsuit:泳衣
 hotpants:热裤
 bikini:比基尼
 glasses:眼镜
+collar:颈圈
+harness:拘束带
 schoolgirl uniform:校服
 garter belt:吊带袜
 lingerie:性感内衣
 kimono:和服
 corset:塑腰
+pasties:乳贴
 eyemask:眼罩
 eyepatch:单眼带
 thigh high boots:过膝靴
 chastity belt:贞操带
+nun:修女服
+straitjacket:拘束衣
 
 ## 角色
 maid:女仆
@@ -192,6 +199,8 @@ gothic lolita:哥特萝莉
 slave:奴隶
 witch:女巫
 miko:巫女
+gyaru:辣妹
+ponygirl:马尾娘
 
 ## 物种
 minigirl:迷你娘
