@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description bilibili-media-download
 // @namespace   https://danor.app/
-// @version     0.7.0-2022.06.13.01
+// @version     0.7.1-2022.06.13.02
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -132,6 +132,28 @@ const writeData = async (reader, handleWrite) => {
 	}
 };
 
+
+const splitSize_Range = (size, max) => {
+	const result = [];
+
+	let sizeNow = 0;
+
+
+	while(sizeNow <= size - max) {
+		result.push(`${sizeNow}-${sizeNow + max - 1}`);
+
+
+		sizeNow += max;
+	}
+
+	if(sizeNow != size) {
+		result.push(`${sizeNow}-${size - 1}`);
+	}
+
+	return result;
+};
+
+
 // 最大文件 2046MB
 const sizeArrayBufferMax = Math.pow(2, 31) - Math.pow(2, 21);
 const sizeAudioMax = Math.pow(2, 27);
@@ -141,11 +163,13 @@ const symbolOverSize = Symbol('over-size');
 const mb1 = 1024 * 1024;
 const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect = false) => {
 	try {
-		const response = await fetch(url);
-		const reader = response.body.getReader();
+		const requestHead = new Request(url, { method: 'HEAD', });
+		const responseSize = await fetch(requestHead);
+
+		const sizeTotal = +responseSize.headers.get('Content-Length');
 
 
-		const sizeTotal = +response.headers.get('Content-Length');
+
 
 		prog.max = sizeTotal;
 		textProg.innerHTML = `<div nz-text-block class="inline" style="width: 200px"></div>`.replace(/\t|\n/g, '');
@@ -162,6 +186,10 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 
 
 		if(!isSaveDirect && sizeTotal <= sizeVideoMax) {
+			const responseGet = await fetch(url);
+
+			const reader = responseGet.body.getReader();
+
 			const datasMedia = new Uint8Array(sizeTotal);
 
 			await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
@@ -173,7 +201,7 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 
 			const a = document.createElement('a');
 			a.classList.add('inline', 'save');
-			a.innerHTML = '[保存]';
+			a.innerHTML = '[下载]';
 			a.download = nameSave;
 			a.href = URL.createObjectURL(new Blob([datasMedia]));
 			textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
@@ -184,31 +212,47 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 			return datasMedia;
 		}
 		else {
-			const a = document.createElement('a');
-			a.classList.add('inline', 'save');
-			a.innerHTML = '[保存]';
-			a.download = nameSave;
-			textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
-			a.addEventListener('click', async () => {
-				const file = await unsafeWindow.showSaveFilePicker({ suggestedName: nameSave });
+			const ranges = splitSize_Range(sizeTotal, sizeArrayBufferMax);
 
-				if(!file) { throw '没有选择文件'; }
+			let sizeReadAll = 0;
+			ranges.reverse().forEach((range, index) => {
+				const a = document.createElement('a');
+				a.classList.add('inline', 'save');
+				a.innerHTML = `[下载${String(ranges.length - index).padStart(2, '0')}]`;
+				a.download = nameSave;
+				textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
 
 
-				const writable = await file.createWritable();
+				a.addEventListener('click', async () => {
+					const headerGet = new Headers();
+					headerGet.append('Range', `bytes=${range}`);
+					const requestGet = new Request(url, { headers: headerGet });
+					const responseGet = await fetch(requestGet);
 
-				await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
-					await writable.write(data);
+					const reader = responseGet.body.getReader();
 
-					updateProg(sizeReadAfter);
+					const file = await unsafeWindow.showSaveFilePicker({
+						suggestedName: nameSave + (ranges.length == 1 ? '' : `.part${ranges.length - index}`)
+					});
+
+					if(!file) { throw '没有选择文件'; }
+
+
+					const writable = await file.createWritable();
+
+					await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
+						await writable.write(data);
+
+						updateProg(sizeReadAll += sizeReadAfter);
+					});
+
+					await writable.close();
+
+
+					console.log(`已下载: ${name}`);
 				});
 
-				await writable.close();
-
-
-				console.log(`已保存: ${name}`);
 			});
-
 
 			return symbolOverSize;
 		}
@@ -291,7 +335,7 @@ const onClickDown = async function(event) {
 
 		const a = document.createElement('a');
 		a.classList.add('inline', 'save');
-		a.innerHTML = '[保存混流批处理]';
+		a.innerHTML = '[下载混流批处理]';
 		a.download = `混流 ${nameMixin}.bat`;
 		a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
 		a.click();
