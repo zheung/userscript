@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description bilibili-media-download
 // @namespace   https://danor.app/
-// @version     0.7.1-2022.06.13.02
+// @version     0.8.1-2022.06.15.02
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -219,8 +219,10 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 				const a = document.createElement('a');
 				a.classList.add('inline', 'save');
 				a.innerHTML = `[下载${String(ranges.length - index).padStart(2, '0')}]`;
-				a.download = nameSave;
 				textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
+
+				const nameSavePart = nameSave + (ranges.length == 1 ? '' : `.part${ranges.length - index}`);
+				a.download = nameSavePart;
 
 
 				a.addEventListener('click', async () => {
@@ -231,9 +233,7 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 
 					const reader = responseGet.body.getReader();
 
-					const file = await unsafeWindow.showSaveFilePicker({
-						suggestedName: nameSave + (ranges.length == 1 ? '' : `.part${ranges.length - index}`)
-					});
+					const file = await unsafeWindow.showSaveFilePicker({ suggestedName: nameSavePart });
 
 					if(!file) { throw '没有选择文件'; }
 
@@ -324,19 +324,29 @@ const onClickDown = async function(event) {
 	}
 	else {
 		const script = `
-		@echo off
-		ffmpeg -y -v quiet -i ".\\${nameVideoSave}" -i ".\\${nameAudioSave}" -vcodec copy -acodec copy ".\\${nameMixin}"
-		echo 混流 ${nameMixin}
+		echo 合并[视频文件]
+		copy /B ".\\${nameMixin}.part*" ".\\${nameMixin}"
+		echo 合并[视频文件] ✔
 
+
+		echo 混流[音视频文件]
+		ffmpeg -y -v quiet -i ".\\${nameVideoSave}" -i ".\\${nameAudioSave}" -vcodec copy -acodec copy ".\\${nameMixin}"
+		echo 混流[音视频文件] ✔
+
+		echo 移除[音视频文件]
 		del ".\\${nameVideoSave}"
 		del ".\\${nameAudioSave}"
-		echo Done
-		del %0`.replace(/\t/g, '').replace(/\n/g, '\r\n');
+		echo 移除[音视频文件] ✔
+
+		echo 删除脚本自身
+		del %0
+		echo 删除脚本自身 ✔
+		`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n');
 
 		const a = document.createElement('a');
 		a.classList.add('inline', 'save');
-		a.innerHTML = '[下载混流批处理]';
-		a.download = `混流 ${nameMixin}.bat`;
+		a.innerHTML = '[下载合并批处理]';
+		a.download = `合并 ${nameMixin}.bat`;
 		a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
 		a.click();
 
