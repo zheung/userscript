@@ -16,6 +16,7 @@ artist:作者
 female:女性
 male:男性
 misc:其他
+other:其他
 reclass:新分类
 
 >select:.gt>a, .gtl>a, .gtw>a
@@ -27,6 +28,7 @@ translated:已翻译
 group:合集
 tankoubon:单行本
 original:原创
+artbook:画集
 uncensored:无修正
 full color:全彩
 mosaic censorship:马赛克修正
@@ -69,6 +71,10 @@ electric shocks:电击
 shibari:绳艺
 sumata:素股
 wrestling:摔跤
+no penetration:无插入
+milking:榨乳
+nipple stimulation:刺激乳头
+
 
 ##行为细节
 wormhole:虫洞交
@@ -159,6 +165,7 @@ onahole:人工阴道
 unusual pupils:奇怪的瞳孔
 beauty mark:美人痣
 hairy:阴毛
+hair buns:丸子头
 
 ## 着装
 masked face:蒙面
@@ -201,6 +208,7 @@ witch:女巫
 miko:巫女
 gyaru:辣妹
 ponygirl:马尾娘
+magical girl:魔法少女
 
 ## 物种
 minigirl:迷你娘

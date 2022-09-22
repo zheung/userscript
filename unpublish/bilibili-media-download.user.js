@@ -2,20 +2,26 @@
 // @name        bilibili-media-download
 // @description bilibili-media-download
 // @namespace   https://danor.app/
-// @version     0.8.1-2022.06.15.02
+// @version     0.8.4-2022.09.22.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
 // @grant       unsafeWindow
 // @require     https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
 // @require     https://cdn.jsdelivr.net/npm/gbk.js@0.3.0/dist/gbk2.min.js
-// @require     https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.10.1/dist/ffmpeg.min.js
+// @require     https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js
 // @resource    notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
 // @match       *://*.bilibili.com/bangumi/play/*
 // @match       *://*.bilibili.com/video/*
 // ==/UserScript==
 
 /* global Notyf, __INITIAL_STATE__, FFmpeg, GBK */
+
+
+const G = {
+	log(...params) { console.log('bilibili-media-download: ', ...params); },
+	error(...params) { console.error('bilibili-media-download: ', ...params); },
+};
 
 
 GM_addStyle(GM_getResourceText('notyf_css'));
@@ -65,7 +71,8 @@ GM_addStyle(`
 	}
 `);
 
-const renderSize = function(value) {
+
+const renderSize = value => {
 	value = parseFloat(value);
 	const index = Math.floor(Math.log(value) / Math.log(1024));
 
@@ -207,7 +214,7 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 			textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
 
 
-			console.log(`已下载: ${name}`);
+			G.log('download-media', '✔', name);
 
 			return datasMedia;
 		}
@@ -249,7 +256,7 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 					await writable.close();
 
 
-					console.log(`已下载: ${name}`);
+					G.log('download-media', '✔', name);
 				});
 
 			});
@@ -275,10 +282,11 @@ const mediasFinal = {
 	audio: null,
 	mixin: null,
 };
-const onClickDown = async function(event) {
+const onClickDown = async event => {
 	event.stopPropagation();
+	G.log('download-start', '...');
 
-	const source = unsafeWindow.dashPlayer.player.getSource();
+	const source = unsafeWindow.__playinfo__.data.dash;
 	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
 	const audio = source.audio.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
 
@@ -305,24 +313,26 @@ const onClickDown = async function(event) {
 
 	const urlVideo = video.baseUrl;
 	const nameVideo = 'video.m4s';
-	const nameVideoSave = `bilibili-${uid}-${slot}-${title}${pages.length > 1 ? `-p${p}-${part}` : ''}-video-${video.height}p.m4s`;
+	const nameVideoSave = `bilibili@${uid}@${slot}@${title}${pages.length > 1 ? `@p${p}@${part}` : ''}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
 
 	const dataVideo = mediasFinal.video = await downloadMedia(urlVideo, nameVideo, nameVideoSave, progs[0], textsProg[0]);
 
 
 	const urlAudio = audio.baseUrl;
 	const nameAudio = 'audio.m4s';
-	const nameAudioSave = `bilibili-${uid}-${slot}-${title}${pages.length > 1 ? `-p${p}-${part}` : ''}-audio.m4s`;
+	const nameAudioSave = `bilibili@${uid}@${slot}@${title}${pages.length > 1 ? `@p${p}@${part}` : ''}@audio.m4s`.replace(/[~/]/g, '_');
 
 	mediasFinal.audio = await downloadMedia(urlAudio, nameAudio, nameAudioSave, progs[1], textsProg[1], dataVideo === symbolOverSize);
 
 
-	const nameMixin = `bilibili-${uid}-${slot}-${title}${pages.length > 1 ? `-p${p}-${part}` : ''}-${video.height}p-${video.bandwidth}.mp4`;
+	const nameMixin = `bilibili@${uid}@${slot}@${title}${pages.length > 1 ? `@p${p}@${part}` : ''}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
 
-	if(mediasFinal.video !== symbolOverSize && mediasFinal.audio !== symbolOverSize) {
+	if(mediasFinal.video !== symbolOverSize && mediasFinal.audio !== symbolOverSize && ffmpeg.isLoaded()) {
 		mixinMedia(nameMixin);
 	}
 	else {
+		document.querySelectorAll('a.inline.save').forEach(a => a.click());
+
 		const script = `
 		echo 合并[视频文件]
 		copy /B ".\\${nameMixin}.part*" ".\\${nameMixin}"
@@ -356,23 +366,23 @@ const onClickDown = async function(event) {
 
 
 const initButton = () => {
-	const buttonSetting = document.querySelector('.bilibili-player-video-danmaku-setting');
+	const buttonSetting = document.querySelector('.bpx-player-dm-setting');
 
 	if(buttonSetting) {
 		const buttonDown = buttonSetting.cloneNode(true);
 		buttonSetting.parentNode.insertBefore(buttonDown, buttonSetting.nextElementSibling);
+		// document.body.appendChild(buttonDown);
 
 		const svg = buttonDown.querySelector('svg');
 		svg.setAttribute('viewBox', '0 -5 26 36');
 		svg.innerHTML = '<polygon points="12.732,26 25.464,13.27 18.026,13.27 18.026,0 7.438,0 7.438,13.27 0,13.27" />';
 
 		buttonDown.classList.add('nz-tmd-button');
+		// buttonDown.classList.remove('bpx-player-dm-setting');
 		buttonDown.title = '下载';
-		if(buttonDown.childNodes[1]) { buttonDown.removeChild(buttonDown.childNodes[1]); }
 
 		return buttonDown;
 	}
-
 };
 
 
@@ -380,7 +390,7 @@ let ffmpegLoad;
 try {
 	ffmpegLoad = FFmpeg.createFFmpeg({ log: false });
 }
-catch(error) { console.error(error.message ?? error); }
+catch(error) { G.error(error.message ?? error); }
 
 const ffmpeg = ffmpegLoad;
 
@@ -398,26 +408,33 @@ const mixinMedia = async nameFile => {
 	a.href = URL.createObjectURL(new Blob([dataFinal]));
 	a.click();
 
-	console.log(`Saved: ${a.download}`);
+	G.log('save-mixin-media', '✔', a.download);
 };
 
 
 (async () => {
 	try {
 		await ffmpeg.load();
+
+		G.log('load-ffmpeg', '✔');
 	}
-	catch(error) { console.error(error.message ?? error); }
+	catch(error) { G.error('load-ffmpeg', '✖', error.message ?? error); }
 
 
 	new MutationObserver(() => {
 		try {
 			if(!document.querySelector('.nz-tmd-button')) {
 				const buttonDown = initButton();
-				if(buttonDown) { buttonDown.addEventListener('click', onClickDown); }
+
+				if(buttonDown) {
+					buttonDown.addEventListener('click', onClickDown);
+
+					G.log('add-download-button', '✔');
+				}
 			}
 		}
 		catch(error) {
-			console.error(error.message, error.stack);
+			G.error(error.message, error.stack);
 		}
 	}).observe(document.body, { childList: true, subtree: true });
 })();

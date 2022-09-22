@@ -259,6 +259,7 @@ new MutationObserver(() => {
 	try {
 		if(!document.querySelector('.nz-fpis-button')) {
 			const buttonDown = initButton();
+
 			if(buttonDown) { buttonDown.addEventListener('click', onClickDown); }
 		}
 	}
