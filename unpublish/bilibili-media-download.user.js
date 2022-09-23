@@ -320,12 +320,12 @@ const onClickDown = async event => {
 
 	const urlAudio = audio.baseUrl;
 	const nameAudio = 'audio.m4s';
-	const nameAudioSave = `bilibili@${uid}@${slot}@${title}${pages.length > 1 ? `@p${p}@${part}` : ''}@audio.m4s`.replace(/[~/]/g, '_');
+	const nameAudioSave = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@audio.m4s`.replace(/[~/]/g, '_');
 
 	mediasFinal.audio = await downloadMedia(urlAudio, nameAudio, nameAudioSave, progs[1], textsProg[1], dataVideo === symbolOverSize);
 
 
-	const nameMixin = `bilibili@${uid}@${slot}@${title}${pages.length > 1 ? `@p${p}@${part}` : ''}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
+	const nameMixin = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
 
 	if(mediasFinal.video !== symbolOverSize && mediasFinal.audio !== symbolOverSize && ffmpeg.isLoaded()) {
 		mixinMedia(nameMixin);
