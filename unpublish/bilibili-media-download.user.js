@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description bilibili-media-download
 // @namespace   https://danor.app/
-// @version     0.8.4-2022.09.22.01
+// @version     0.8.5-2022.09.23.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -313,7 +313,7 @@ const onClickDown = async event => {
 
 	const urlVideo = video.baseUrl;
 	const nameVideo = 'video.m4s';
-	const nameVideoSave = `bilibili@${uid}@${slot}@${title}${pages.length > 1 ? `@p${p}@${part}` : ''}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
+	const nameVideoSave = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
 
 	const dataVideo = mediasFinal.video = await downloadMedia(urlVideo, nameVideo, nameVideoSave, progs[0], textsProg[0]);
 
