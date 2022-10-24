@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description bilibili-media-download
 // @namespace   https://danor.app/
-// @version     0.8.5-2022.09.23.01
+// @version     0.9.0-2022.10.13.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -282,8 +282,7 @@ const mediasFinal = {
 	audio: null,
 	mixin: null,
 };
-const onClickDown = async event => {
-	event.stopPropagation();
+const onClickDown = async (p_, isCloseAfterDownload) => {
 	G.log('download-start', '...');
 
 	const source = unsafeWindow.__playinfo__.data.dash;
@@ -300,7 +299,7 @@ const onClickDown = async event => {
 	const title = state.h1Title ?? state?.videoData?.title ?? '未知标题';
 	const uid = state?.upData?.mid ?? '0';
 
-	const p = state?.p;
+	const p = p_ ?? state?.p;
 	const pages = state?.videoData?.pages;
 	const part = pages?.find(page => page.page == p)?.part;
 
@@ -328,7 +327,7 @@ const onClickDown = async event => {
 	const nameMixin = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
 
 	if(mediasFinal.video !== symbolOverSize && mediasFinal.audio !== symbolOverSize && ffmpeg.isLoaded()) {
-		mixinMedia(nameMixin);
+		mixinMedia(nameMixin, isCloseAfterDownload);
 	}
 	else {
 		document.querySelectorAll('a.inline.save').forEach(a => a.click());
@@ -378,7 +377,6 @@ const initButton = () => {
 		svg.innerHTML = '<polygon points="12.732,26 25.464,13.27 18.026,13.27 18.026,0 7.438,0 7.438,13.27 0,13.27" />';
 
 		buttonDown.classList.add('nz-tmd-button');
-		// buttonDown.classList.remove('bpx-player-dm-setting');
 		buttonDown.title = '下载';
 
 		return buttonDown;
@@ -395,7 +393,7 @@ catch(error) { G.error(error.message ?? error); }
 const ffmpeg = ffmpegLoad;
 
 
-const mixinMedia = async nameFile => {
+const mixinMedia = async (nameFile, isCloseAfterDownload) => {
 	ffmpeg.FS('writeFile', 'video.m4s', mediasFinal.video);
 	ffmpeg.FS('writeFile', 'audio.m4s', mediasFinal.audio);
 
@@ -409,6 +407,10 @@ const mixinMedia = async nameFile => {
 	a.click();
 
 	G.log('save-mixin-media', '✔', a.download);
+
+	if(isCloseAfterDownload) {
+		setTimeout(() => window.close(), 1000 * 5);
+	}
 };
 
 
@@ -427,10 +429,16 @@ const mixinMedia = async nameFile => {
 				const buttonDown = initButton();
 
 				if(buttonDown) {
-					buttonDown.addEventListener('click', onClickDown);
+					buttonDown.addEventListener('click', event => (
+						event.stopPropagation(),
+						onClickDown()
+					));
 
 					G.log('add-download-button', '✔');
 				}
+
+				const pAutoDownload = new URLSearchParams(location.search).get('bilibili-media-download-auto-download');
+				if(pAutoDownload) { onClickDown(~~pAutoDownload, true); }
 			}
 		}
 		catch(error) {
