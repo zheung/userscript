@@ -2,20 +2,21 @@
 // @name        bilibili-media-download
 // @description bilibili-media-download
 // @namespace   https://danor.app/
-// @version     0.9.0-2022.10.13.01
+// @version     1.0.0-2022.10.24.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
 // @grant       unsafeWindow
 // @require     https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
 // @require     https://cdn.jsdelivr.net/npm/gbk.js@0.3.0/dist/gbk2.min.js
-// @require     https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.5/dist/ffmpeg.min.js
+// @require     https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js
 // @resource    notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
 // @match       *://*.bilibili.com/bangumi/play/*
 // @match       *://*.bilibili.com/video/*
 // ==/UserScript==
 
-/* global Notyf, __INITIAL_STATE__, FFmpeg, GBK */
+/* global Notyf, FFmpeg, GBK */
+/* global __INITIAL_STATE__ */
 
 
 const G = {
@@ -107,14 +108,17 @@ const openDBox = text => {
 	const boxTitle = dbox.querySelector('.title');
 	const boxDown = dbox.querySelector('.down');
 
-	const initer = (text, count) => {
+	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
+
+	const initer = (count, text = '') => {
 		dbox.title = text;
+
 		boxTitle.innerHTML = boxTitle.innerHTML.replace(' 准备中...', '');
 		boxDown.innerHTML = domTextDBox.repeat(count);
 
-		const progs = dbox.querySelectorAll('progress');
-		const textsProg = dbox.querySelectorAll('.prog');
-		const textsInfo = dbox.querySelectorAll('.info');
+		const progs = [...dbox.querySelectorAll('progress')];
+		const textsProg = [...dbox.querySelectorAll('div.prog')];
+		const textsInfo = [...dbox.querySelectorAll('div.info')];
 
 		return { progs, textsProg, textsInfo, };
 	};
@@ -122,7 +126,10 @@ const openDBox = text => {
 	return { noty, initer, boxTitle, boxDown };
 };
 
-
+/**
+ * @param {ReadableStreamDefaultReader<Uint8Array>} reader
+ * @param {Function} handleWrite
+ */
 const writeData = async (reader, handleWrite) => {
 	let sizeRead = 0;
 	let isWhile = true;
@@ -140,21 +147,21 @@ const writeData = async (reader, handleWrite) => {
 };
 
 
-const splitSize_Range = (size, max) => {
+const makeRangesBySize = (size, max) => {
 	const result = [];
 
 	let sizeNow = 0;
 
 
 	while(sizeNow <= size - max) {
-		result.push(`${sizeNow}-${sizeNow + max - 1}`);
+		result.push([`${sizeNow}-${sizeNow + max - 1}`, sizeNow + max - sizeNow]);
 
 
 		sizeNow += max;
 	}
 
 	if(sizeNow != size) {
-		result.push(`${sizeNow}-${size - 1}`);
+		result.push([`${sizeNow}-${size - 1}`, size - sizeNow]);
 	}
 
 	return result;
@@ -168,6 +175,32 @@ const sizeVideoMax = sizeArrayBufferMax - sizeAudioMax;
 const symbolOverSize = Symbol('over-size');
 
 const mb1 = 1024 * 1024;
+
+const fetchMediaSize = async (url) => {
+	const requestHead = new Request(url, { method: 'HEAD', });
+	const responseSize = await fetch(requestHead);
+
+	const sizeTotal = +responseSize.headers.get('Content-Length');
+
+
+	return sizeTotal;
+};
+
+const updateProg = (sizeRead, sizeTotal, prog, texter) => {
+	if(sizeRead % mb1 == 0 || sizeRead == sizeTotal) {
+		texter.innerHTML = `${name} ${renderSize(sizeTotal)} ${(sizeRead * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%`;
+
+		prog.value = sizeRead;
+	}
+};
+const updateProg2 = (now, max, prog, texter) => {
+	texter.innerHTML = `${renderSize(max)} ${(now * 100 / max).toFixed(2).padStart(5, '0')}%`;
+
+	prog.value = now;
+	prog.max = max;
+};
+
+
 const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect = false) => {
 	try {
 		const requestHead = new Request(url, { method: 'HEAD', });
@@ -182,13 +215,6 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 		textProg.innerHTML = `<div nz-text-block class="inline" style="width: 200px"></div>`.replace(/\t|\n/g, '');
 		const textProgBlock = textProg.querySelector('[nz-text-block]');
 
-		const updateProg = sizeRead => {
-			if(sizeRead % mb1 == 0 || sizeRead == sizeTotal) {
-				textProgBlock.innerHTML = `${name} ${renderSize(sizeTotal)} ${(sizeRead * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%`;
-
-				prog.value = sizeRead;
-			}
-		};
 
 
 
@@ -202,7 +228,7 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 			await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
 				datasMedia.set(data, sizeRead);
 
-				updateProg(sizeReadAfter);
+				updateProg(sizeReadAfter, sizeTotal, prog, textProgBlock);
 			});
 
 
@@ -216,13 +242,14 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 
 			G.log('download-media', '✔', name);
 
+
 			return datasMedia;
 		}
 		else {
-			const ranges = splitSize_Range(sizeTotal, sizeArrayBufferMax);
+			const ranges = makeRangesBySize(sizeTotal, sizeArrayBufferMax);
 
 			let sizeReadAll = 0;
-			ranges.reverse().forEach((range, index) => {
+			ranges.reverse().forEach(([range, sizeRange], index) => {
 				const a = document.createElement('a');
 				a.classList.add('inline', 'save');
 				a.innerHTML = `[下载${String(ranges.length - index).padStart(2, '0')}]`;
@@ -277,6 +304,51 @@ const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect =
 	}
 };
 
+
+const createSaveLink = (innerHTML, title, download) => {
+	const a = document.createElement('a');
+
+	a.classList.add('inline', 'save');
+	a.innerHTML = innerHTML;
+	a.title = title;
+	a.download = download;
+
+	return a;
+};
+
+const initSave = (url, nameSave, prog, textProg, what, sizeRange, range) => {
+	const a = createSaveLink(`[下载${what}]`, (range ? `${range}, ` : '') + `${renderSize(sizeRange)}`, nameSave);
+	textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
+
+
+	a.addEventListener('click', async () => {
+		/** @type {FileSystemFileHandle} */
+		const file = await unsafeWindow.showSaveFilePicker({ suggestedName: nameSave });
+
+		if(!file) { throw `没有选择文件，无法保存${nameSave}`; }
+
+
+		const headerGet = new Headers();
+		headerGet.append('Range', `bytes=${range}`);
+		const requestGet = new Request(url, { headers: headerGet });
+		const responseGet = await fetch(requestGet);
+
+		const reader = responseGet.body.getReader();
+
+		const writable = await file.createWritable();
+
+		await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
+			await writable.write(data);
+
+			updateProg2(sizeReadAfter, sizeRange, prog, textProg);
+		});
+
+		await writable.close();
+
+		G.log('save-media', '✔', nameSave);
+	});
+};
+
 const mediasFinal = {
 	video: null,
 	audio: null,
@@ -303,61 +375,83 @@ const onClickDown = async (p_, isCloseAfterDownload) => {
 	const pages = state?.videoData?.pages;
 	const part = pages?.find(page => page.page == p)?.part;
 
-	const { noty, initer, boxTitle, boxDown } = openDBox(title);
-	const { progs, textsProg } = initer('', 2);
 
-	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
-
-
+	const namePrefix = `bilibili@${uid}@${slot}@${title}` + (pages?.length > 1 ? `@p${p}@${part}` : '');
 
 	const urlVideo = video.baseUrl;
 	const nameVideo = 'video.m4s';
-	const nameVideoSave = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
-
-	const dataVideo = mediasFinal.video = await downloadMedia(urlVideo, nameVideo, nameVideoSave, progs[0], textsProg[0]);
-
+	const nameVideoSave = `${namePrefix}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
 
 	const urlAudio = audio.baseUrl;
 	const nameAudio = 'audio.m4s';
-	const nameAudioSave = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@audio.m4s`.replace(/[~/]/g, '_');
+	const nameAudioSave = `${namePrefix}@audio.m4s`.replace(/[~/]/g, '_');
 
-	mediasFinal.audio = await downloadMedia(urlAudio, nameAudio, nameAudioSave, progs[1], textsProg[1], dataVideo === symbolOverSize);
+	const nameMixin = `${namePrefix}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
 
 
-	const nameMixin = `bilibili@${uid}@${slot}@${title}${pages?.length > 1 ? `@p${p}@${part}` : ''}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
+	const sizeVideo = await fetchMediaSize(urlVideo);
+	const sizeAudio = await fetchMediaSize(urlAudio);
 
-	if(mediasFinal.video !== symbolOverSize && mediasFinal.audio !== symbolOverSize && ffmpeg.isLoaded()) {
-		mixinMedia(nameMixin, isCloseAfterDownload);
+
+	const modeSafe = localStorage.getItem('bilibili-media-download/save-mode') == 'direct' || sizeVideo > sizeVideoMax
+		? 'direct'
+		: 'mixin';
+
+
+	const { initer, boxDown } = openDBox(title);
+
+
+	if('mixin' == modeSafe) {
+		const { progs, textsProg } = initer(2);
+
+		const dataVideo = mediasFinal.video = await downloadMedia(urlVideo, nameVideo, nameVideoSave, progs[0], textsProg[0]);
+
+		mediasFinal.audio = await downloadMedia(urlAudio, nameAudio, nameAudioSave, progs[1], textsProg[1], dataVideo === symbolOverSize);
+
+		if(ffmpeg.isLoaded()) { mixinMedia(nameMixin, isCloseAfterDownload); }
 	}
-	else {
-		document.querySelectorAll('a.inline.save').forEach(a => a.click());
+	else if('direct' == modeSafe) {
+		const ranges = makeRangesBySize(sizeVideo, sizeArrayBufferMax);
 
-		const script = `
-		echo 合并[视频文件]
-		copy /B ".\\${nameMixin}.part*" ".\\${nameMixin}"
-		echo 合并[视频文件] ✔
+		const { progs, textsProg } = initer(ranges.length + 1);
+
+		ranges.forEach(([range, sizeRange], index) => {
+			const nameVideoPart = nameVideo + `.part${index + 1}`;
+
+			const prog = progs[index];
+			const textProg = textsProg[index];
 
 
-		echo 混流[音视频文件]
-		ffmpeg -y -v quiet -i ".\\${nameVideoSave}" -i ".\\${nameAudioSave}" -vcodec copy -acodec copy ".\\${nameMixin}"
-		echo 混流[音视频文件] ✔
+			initSave(urlVideo, nameVideoPart, prog, textProg, `视频${String(index + 1).padStart(2, '0')}`, sizeRange, range);
+		});
 
-		echo 移除[音视频文件]
-		del ".\\${nameVideoSave}"
-		del ".\\${nameAudioSave}"
-		echo 移除[音视频文件] ✔
 
-		echo 删除脚本自身
-		del %0
-		echo 删除脚本自身 ✔
-		`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n');
+		initSave(urlAudio, nameAudio, progs[progs.length - 1], textsProg[textsProg.length - 1], '音频', sizeAudio);
 
-		const a = document.createElement('a');
-		a.classList.add('inline', 'save');
-		a.innerHTML = '[下载合并批处理]';
-		a.download = `合并 ${nameMixin}.bat`;
-		a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(script))]));
-		a.click();
+
+
+		const a = createSaveLink('[下载合并脚本]', '', `合并 ${nameMixin}.bat`);
+		a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(`
+			echo 合并[视频文件]
+			copy /B ".\\${nameMixin}.part*" ".\\${nameMixin}"
+			echo 合并[视频文件] ✔
+
+
+			echo 混流[音视频文件]
+			ffmpeg -y -v quiet -i ".\\${nameVideoSave}" -i ".\\${nameAudioSave}" -vcodec copy -acodec copy ".\\${nameMixin}"
+			echo 混流[音视频文件] ✔
+
+			echo 移除[音视频文件]
+			del ".\\${nameVideoSave}"
+			del ".\\${nameAudioSave}"
+			echo 移除[音视频文件] ✔
+
+			echo 删除脚本自身
+			del %0
+			echo 删除脚本自身 ✔
+			`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
+		))]));
+		// a.click();
 
 		boxDown.appendChild(a);
 	}

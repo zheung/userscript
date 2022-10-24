@@ -4,6 +4,8 @@
 	"description": "",
 	"author": "Nuogz",
 	"devDependencies": {
-		"eslint": "^8.23.1"
+		"@types/tampermonkey": "^4.0.5",
+		"@types/wicg-file-system-access": "^2020.9.5",
+		"eslint": "^8.26.0"
 	}
 }
