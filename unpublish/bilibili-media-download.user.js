@@ -202,9 +202,10 @@ const createSaveLink = (innerHTML, download, href, title) => {
 	a.classList.add('inline', 'save');
 
 	a.innerHTML = innerHTML;
-	a.download = download;
-	a.href = href;
-	a.title = title;
+
+	if(a.download) { a.download = download; }
+	if(a.href) { a.href = href; }
+	if(a.title) { a.title = title; }
 
 	return a;
 };
@@ -288,7 +289,7 @@ const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDown
 const initSaver = (url, nameSave, box, what, sizeRange, range) => {
 	const [, infoer] = box;
 
-	const a = createSaveLink(`[下载${what}]`, (range ? `${range}, ` : '') + `${renderSize(sizeRange)}`, nameSave);
+	const a = createSaveLink(`[下载${what}]`, nameSave, '', (range ? `${range}, ` : '') + `${renderSize(sizeRange)}`);
 	infoer.parentNode.insertBefore(a, infoer.nextElementSibling);
 
 
@@ -337,13 +338,13 @@ const makeDownloadButton = (I, initer, boxMain) => {
 
 
 
-	const a = createSaveLink('[下载合并脚本]', '', `合并 ${I.nameMixin}.bat`);
-	a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(`
+
+	const dataMixin = new Uint8Array(GBK.encode(`
 		@echo off
+
 		echo 合并[视频文件]
 		copy /B ".\\${I.audio.nameSave}.part*" ".\\${I.audio.nameSave}"
 		echo 合并[视频文件] ✔
-
 
 		echo 混流[音视频文件]
 		ffmpeg -y -v quiet -i ".\\${I.audio.nameSave}" -i ".\\${I.audio.nameSave}" -vcodec copy -acodec copy ".\\${I.nameMixin}"
@@ -358,10 +359,25 @@ const makeDownloadButton = (I, initer, boxMain) => {
 		echo 删除脚本自身
 		del %0
 		echo 删除脚本自身 ✔
-		`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
-	))]));
+	`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
+	));
 
+	const nameMinxinSave = `bilibili@${I.uid}@${I.slot}.mixin.bat`;
+
+	const a = createSaveLink('[下载合并脚本]');
 	boxMain.appendChild(a);
+
+	a.addEventListener('click', async () => {
+		const file = await unsafeWindow.showSaveFilePicker({ suggestedName: nameMinxinSave });
+
+		if(!file) { throw `没有选择文件，无法保存${nameMinxinSave}`; }
+
+		const writable = await file.createWritable();
+
+		await writable.write({ type: 'write', data: dataMixin });
+
+		await writable.close();
+	});
 };
 
 
@@ -378,20 +394,20 @@ const download = async (p_, isCloseAfterDownload) => {
 
 	const state = __INITIAL_STATE__;
 
-	const slot = I.slot = state.bvid ||
+	I.slot = state.bvid ||
 		location.pathname.replace(/\/$/, '')
 			.replace('/bangumi/play/', '')
 			.replace('/video/', '');
 
-	const title = I.title = state.h1Title ?? state?.videoData?.title ?? '未知标题';
-	const uid = I.uid = state?.upData?.mid ?? '0';
+	I.title = state.h1Title ?? state?.videoData?.title ?? '未知标题';
+	I.uid = state?.upData?.mid ?? '0';
 
-	const p = I.p = p_ ?? state?.p;
+	I.p = p_ ?? state?.p;
 	const pages = state?.videoData?.pages;
-	const part = I.part = pages?.find(page => page.page == p)?.part;
+	I.part = pages?.find(page => page.page == I.p)?.part;
 
 
-	const namePrefix = `bilibili@${uid}@${slot}@${title}` + (pages?.length > 1 ? `@p${p}@${part}` : '');
+	const namePrefix = `bilibili@${I.uid}@${I.slot}@${I.title}` + (pages?.length > 1 ? `@p${I.p}@${I.part}` : '');
 
 	I.nameMixin = `${namePrefix}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
 
@@ -408,7 +424,7 @@ const download = async (p_, isCloseAfterDownload) => {
 	I.audio.size = await fetchMediaSize(I.audio.url);
 
 
-	const { initer, boxMain } = openNoty(title);
+	const { initer, boxMain } = openNoty(`● ${I.title}`);
 
 	const modeSave = I.video.size > sizeVideoMax || localStorage.getItem(`${namePackage}/save-mode`) == 'direct' ? 'direct' : 'mixin';
 	if('mixin' == modeSave) {
