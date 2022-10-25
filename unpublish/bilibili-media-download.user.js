@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        bilibili-media-download
-// @description bilibili-media-download
+// @description as the title
 // @namespace   https://danor.app/
-// @version     1.0.0-2022.10.24.01
+// @version     1.1.0-2022.10.25.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -19,58 +19,132 @@
 /* global __INITIAL_STATE__ */
 
 
+
+const namePackage = GM_info.script.name;
+
+
 const G = {
-	log(...params) { console.log('bilibili-media-download: ', ...params); },
-	error(...params) { console.error('bilibili-media-download: ', ...params); },
+	log(...params) { console.log(`${namePackage}: `, ...params); },
+	error(...params) { console.error(`${namePackage}: `, ...params); },
 };
+
+
+let ffmpegLoad;
+try {
+	ffmpegLoad = FFmpeg.createFFmpeg({ log: false });
+}
+catch(error) { G.error(error.message ?? error); }
+
+const ffmpeg = ffmpegLoad;
 
 
 GM_addStyle(GM_getResourceText('notyf_css'));
 GM_addStyle(`
-	.nz-tmd-notify {
+	.${namePackage} {
+		padding: 0px;
 		background: #1da1f2;
 		box-shadow: rgb(136 153 166 / 20%) 0px 0px 15px, rgb(136 153 166 / 15%) 0px 0px 3px 1px;
-		border-radius: 4px;
+		border-radius: 3px;
 		max-width: unset;
 	}
 
-	.nz-tmd-notify .inline {
+	.${namePackage}>.notyf__wrapper {
+		padding: 10px;
+	}
+
+
+	.${namePackage} .inline {
 		display: inline-block;
 		vertical-align: top;
 	}
 
-	.nz-tmd-notify>.notyf__wrapper {
-		padding-right: 0px;
+
+	.${namePackage} [title-name] {
+		margin-bottom: 5px;
 	}
 
-	.nz-tmd-notify progress {
+	.${namePackage} [proger] {
 		width: 100px;
 		border: none;
 	}
-	.nz-tmd-notify .prog {
+
+	.${namePackage} [proger]::-webkit-progress-bar {
+		background-color: #ffffff;
+		border-radius: 3px;
+	}
+	.${namePackage} [proger]::-webkit-progress-value {
+		background: #17bf63;
+		border-radius: 3px;
+	}
+
+	.${namePackage} [infoer] {
 		text-align: right;
 	}
-	.nz-tmd-notify .save {
+
+	.${namePackage} .save {
 		color: white;
 		text-decoration: none;
 		margin-left: 5px;
 	}
 
-	.nz-tmd-notify progress::-webkit-progress-bar {
-		background-color: #ffffff;
-		border-radius: 4px;
-	}
-	.nz-tmd-notify progress::-webkit-progress-value {
-		background: #17bf63;
-		border-radius: 4px;
-	}
-
-	[nz-text-block] {
+	.${namePackage} [text-liner] {
 		text-align: right;
 		overflow: hidden;
 		white-space: nowrap;
 	}
 `);
+
+
+const notyf = new Notyf({
+	duration: 0,
+	position: { x: 'right', y: 'top' },
+	types: [
+		{
+			type: namePackage,
+			icon: false,
+			className: namePackage,
+		}
+	]
+});
+
+
+const domTextDBox = `
+<progress proger value="0" max="100"></progress>
+<div class="inline" infoer>准备中...</div><br>
+`;
+const openNoty = title => {
+	const idNoty = (Math.random() * 10000).toFixed(0);
+	const noty = notyf.open({
+		type: namePackage,
+		message: `<div id="${namePackage}-${idNoty}"><div title-name>${title} 准备中...</div><div main></div></div>`
+	});
+
+	const boxNoty = document.querySelector(`#${namePackage}-${idNoty}`);
+	const boxTitle = boxNoty.querySelector('div[title-name]');
+	const boxMain = boxNoty.querySelector('div[main]');
+
+	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
+
+	const initer = (count, title = '') => {
+		boxNoty.title = title;
+
+		boxTitle.innerHTML = boxTitle.innerHTML.replace(' 准备中...', '');
+		boxMain.innerHTML = domTextDBox.repeat(count);
+
+		const progers = [...boxNoty.querySelectorAll('progress')];
+		const infoers = [...boxNoty.querySelectorAll('div[infoer]')];
+
+		return progers.map((proger, index) => [proger, infoers[index]]);
+	};
+
+	return { noty, initer, boxTitle, boxMain };
+};
+
+
+// 最大文件 2046MB
+const sizeArrayBufferMax = Math.pow(2, 31) - Math.pow(2, 21);
+const sizeAudioMax = Math.pow(2, 27);
+const sizeVideoMax = sizeArrayBufferMax - sizeAudioMax;
 
 
 const renderSize = value => {
@@ -80,57 +154,12 @@ const renderSize = value => {
 	return `${(value / Math.pow(1024, index)).toFixed(2).padStart(6, '0')} ${['By', 'KB', 'MB', 'GB'][index]}`;
 };
 
-const notyf = new Notyf({
-	duration: 0,
-	position: { x: 'right', y: 'top' },
-	types: [
-		{
-			type: 'tmd',
-			icon: false,
-			className: 'nz-tmd-notify',
-		}
-	]
-});
-
-
-const domTextDBox = `
-<progress value="0" max="100"></progress>
-<div class="inline prog">准备中...</div><br>
-`;
-const openDBox = text => {
-	const random = (Math.random() * 1000).toFixed(0);
-	const noty = notyf.open({
-		type: 'tmd',
-		message: `<div id="nz-tmd-dbox-${random}"><div class="title">${text} 准备中...</div><div class="down"></div></div>`
-	});
-
-	const dbox = document.querySelector(`#nz-tmd-dbox-${random}`);
-	const boxTitle = dbox.querySelector('.title');
-	const boxDown = dbox.querySelector('.down');
-
-	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
-
-	const initer = (count, text = '') => {
-		dbox.title = text;
-
-		boxTitle.innerHTML = boxTitle.innerHTML.replace(' 准备中...', '');
-		boxDown.innerHTML = domTextDBox.repeat(count);
-
-		const progs = [...dbox.querySelectorAll('progress')];
-		const textsProg = [...dbox.querySelectorAll('div.prog')];
-		const textsInfo = [...dbox.querySelectorAll('div.info')];
-
-		return { progs, textsProg, textsInfo, };
-	};
-
-	return { noty, initer, boxTitle, boxDown };
-};
 
 /**
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader
- * @param {Function} handleWrite
+ * @param {Function} handle
  */
-const writeData = async (reader, handleWrite) => {
+const readReader = async (reader, handle) => {
 	let sizeRead = 0;
 	let isWhile = true;
 
@@ -138,7 +167,7 @@ const writeData = async (reader, handleWrite) => {
 		const { done, value } = await reader.read();
 
 		if(!done || sizeRead == 0) {
-			await handleWrite(value, sizeRead, sizeRead += value.length);
+			await handle(value, sizeRead += value.length, sizeRead - value.length);
 		}
 		else {
 			isWhile = false;
@@ -151,7 +180,6 @@ const makeRangesBySize = (size, max) => {
 	const result = [];
 
 	let sizeNow = 0;
-
 
 	while(sizeNow <= size - max) {
 		result.push([`${sizeNow}-${sizeNow + max - 1}`, sizeNow + max - sizeNow]);
@@ -168,157 +196,100 @@ const makeRangesBySize = (size, max) => {
 };
 
 
-// 最大文件 2046MB
-const sizeArrayBufferMax = Math.pow(2, 31) - Math.pow(2, 21);
-const sizeAudioMax = Math.pow(2, 27);
-const sizeVideoMax = sizeArrayBufferMax - sizeAudioMax;
-const symbolOverSize = Symbol('over-size');
+const createSaveLink = (innerHTML, download, href, title) => {
+	const a = document.createElement('a');
 
-const mb1 = 1024 * 1024;
+	a.classList.add('inline', 'save');
 
-const fetchMediaSize = async (url) => {
-	const requestHead = new Request(url, { method: 'HEAD', });
-	const responseSize = await fetch(requestHead);
+	a.innerHTML = innerHTML;
+	a.download = download;
+	a.href = href;
+	a.title = title;
 
-	const sizeTotal = +responseSize.headers.get('Content-Length');
-
-
-	return sizeTotal;
-};
-
-const updateProg = (sizeRead, sizeTotal, prog, texter) => {
-	if(sizeRead % mb1 == 0 || sizeRead == sizeTotal) {
-		texter.innerHTML = `${name} ${renderSize(sizeTotal)} ${(sizeRead * 100 / sizeTotal).toFixed(2).padStart(5, '0')}%`;
-
-		prog.value = sizeRead;
-	}
-};
-const updateProg2 = (now, max, prog, texter) => {
-	texter.innerHTML = `${renderSize(max)} ${(now * 100 / max).toFixed(2).padStart(5, '0')}%`;
-
-	prog.value = now;
-	prog.max = max;
+	return a;
 };
 
 
-const downloadMedia = async (url, name, nameSave, prog, textProg, isSaveDirect = false) => {
+const fetchMediaSize = async url => {
+	const responseSize = await fetch(new Request(url, { method: 'HEAD', }));
+
+	const size = +responseSize.headers.get('Content-Length');
+
+	return size;
+};
+
+const updateProg = (now, max, box) => {
+	const [proger, infoer] = box;
+
+	infoer.innerHTML = `${renderSize(max)} ${(now * 100 / max).toFixed(2).padStart(5, '0')}%`;
+
+	proger.value = now;
+	proger.max = max;
+};
+
+
+const downloadMediaData = async (II, box) => {
+	const [proger, infoer] = box;
+
 	try {
-		const requestHead = new Request(url, { method: 'HEAD', });
-		const responseSize = await fetch(requestHead);
+		const responseGet = await fetch(II.url);
 
-		const sizeTotal = +responseSize.headers.get('Content-Length');
+		const reader = responseGet.body.getReader();
 
+		const datasMedia = new Uint8Array(II.size);
 
+		await readReader(reader, async (data, sizeReadAfter, sizeRead) => {
+			datasMedia.set(data, sizeRead);
 
-
-		prog.max = sizeTotal;
-		textProg.innerHTML = `<div nz-text-block class="inline" style="width: 200px"></div>`.replace(/\t|\n/g, '');
-		const textProgBlock = textProg.querySelector('[nz-text-block]');
-
-
+			updateProg(sizeReadAfter, II.size, box);
+		});
 
 
-		if(!isSaveDirect && sizeTotal <= sizeVideoMax) {
-			const responseGet = await fetch(url);
+		const linkMedia = createSaveLink(`[下载${II.nameLog}]`, II.nameSave, URL.createObjectURL(new Blob([datasMedia])));
+		infoer.parentNode.insertBefore(linkMedia, infoer.nextElementSibling);
 
-			const reader = responseGet.body.getReader();
-
-			const datasMedia = new Uint8Array(sizeTotal);
-
-			await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
-				datasMedia.set(data, sizeRead);
-
-				updateProg(sizeReadAfter, sizeTotal, prog, textProgBlock);
-			});
+		G.log('download-media', '✔', II.nameLog);
 
 
-			const a = document.createElement('a');
-			a.classList.add('inline', 'save');
-			a.innerHTML = '[下载]';
-			a.download = nameSave;
-			a.href = URL.createObjectURL(new Blob([datasMedia]));
-			textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
-
-
-			G.log('download-media', '✔', name);
-
-
-			return datasMedia;
-		}
-		else {
-			const ranges = makeRangesBySize(sizeTotal, sizeArrayBufferMax);
-
-			let sizeReadAll = 0;
-			ranges.reverse().forEach(([range, sizeRange], index) => {
-				const a = document.createElement('a');
-				a.classList.add('inline', 'save');
-				a.innerHTML = `[下载${String(ranges.length - index).padStart(2, '0')}]`;
-				textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
-
-				const nameSavePart = nameSave + (ranges.length == 1 ? '' : `.part${ranges.length - index}`);
-				a.download = nameSavePart;
-
-
-				a.addEventListener('click', async () => {
-					const headerGet = new Headers();
-					headerGet.append('Range', `bytes=${range}`);
-					const requestGet = new Request(url, { headers: headerGet });
-					const responseGet = await fetch(requestGet);
-
-					const reader = responseGet.body.getReader();
-
-					const file = await unsafeWindow.showSaveFilePicker({ suggestedName: nameSavePart });
-
-					if(!file) { throw '没有选择文件'; }
-
-
-					const writable = await file.createWritable();
-
-					await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
-						await writable.write(data);
-
-						updateProg(sizeReadAll += sizeReadAfter);
-					});
-
-					await writable.close();
-
-
-					G.log('download-media', '✔', name);
-				});
-
-			});
-
-			return symbolOverSize;
-		}
+		return datasMedia;
 	}
 	catch(error) {
-		prog.hidden = true;
+		proger.hidden = true;
 
-		const textProg_ = textProg;
-
-		textProg_.innerHTML = `
-			<div nz-text-block class="inline" style="width: 350px" title="${error.message || error}">${name} error, ${error.message || error}</div>
+		infoer.innerHTML = `
+			<div text-liner class="inline" style="width: 350px" title="${error.message ?? error}">${II.nameLog} error, ${error.message ?? error}</div>
 		`.replace(/\t|\n/g, '');
 
 		throw error;
 	}
 };
 
+const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDownload) => {
+	ffmpeg.FS('writeFile', 'video.m4s', datasVideo);
+	ffmpeg.FS('writeFile', 'audio.m4s', datasAudio);
 
-const createSaveLink = (innerHTML, title, download) => {
+	await ffmpeg.run('-y', '-v', 'quiet', '-i', 'video.m4s', '-i', 'audio.m4s', '-vcodec', 'copy', '-acodec', 'copy', 'output.mp4');
+
+	const datasMixin = ffmpeg.FS('readFile', 'output.mp4');
+
 	const a = document.createElement('a');
+	a.download = nameFile;
+	a.href = URL.createObjectURL(new Blob([datasMixin]));
+	a.click();
 
-	a.classList.add('inline', 'save');
-	a.innerHTML = innerHTML;
-	a.title = title;
-	a.download = download;
+	G.log('save-mixin-media', '✔', a.download);
 
-	return a;
+	if(isCloseAfterDownload) { setTimeout(() => window.close(), 1000 * 5); }
 };
 
-const initSave = (url, nameSave, prog, textProg, what, sizeRange, range) => {
+
+
+
+const initSaver = (url, nameSave, box, what, sizeRange, range) => {
+	const [, infoer] = box;
+
 	const a = createSaveLink(`[下载${what}]`, (range ? `${range}, ` : '') + `${renderSize(sizeRange)}`, nameSave);
-	textProg.parentNode.insertBefore(a, textProg.nextElementSibling);
+	infoer.parentNode.insertBefore(a, infoer.nextElementSibling);
 
 
 	a.addEventListener('click', async () => {
@@ -337,10 +308,10 @@ const initSave = (url, nameSave, prog, textProg, what, sizeRange, range) => {
 
 		const writable = await file.createWritable();
 
-		await writeData(reader, async (data, sizeRead, sizeReadAfter) => {
+		await readReader(reader, async (data, sizeReadAfter) => {
 			await writable.write(data);
 
-			updateProg2(sizeReadAfter, sizeRange, prog, textProg);
+			updateProg(sizeReadAfter, sizeRange, box);
 		});
 
 		await writable.close();
@@ -349,13 +320,57 @@ const initSave = (url, nameSave, prog, textProg, what, sizeRange, range) => {
 	});
 };
 
-const mediasFinal = {
-	video: null,
-	audio: null,
-	mixin: null,
+const makeDownloadButton = (I, initer, boxMain) => {
+	const ranges = makeRangesBySize(I.video.size, sizeArrayBufferMax);
+
+	const boxes = initer(ranges.length + 1);
+
+	ranges.forEach(([range, sizeRange], index) => {
+		const nameVideoPartSave = I.video.nameSave + `.part${index + 1}`;
+
+
+		initSaver(I.video.url, nameVideoPartSave, boxes[index], `${I.video.nameLog}${String(index + 1).padStart(2, '0')}`, sizeRange, range);
+	});
+
+
+	initSaver(I.audio.url, I.audio.nameSave, boxes[boxes.length - 1], I.audio.nameLog, I.audio.size);
+
+
+
+	const a = createSaveLink('[下载合并脚本]', '', `合并 ${I.nameMixin}.bat`);
+	a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(`
+		@echo off
+		echo 合并[视频文件]
+		copy /B ".\\${I.audio.nameSave}.part*" ".\\${I.audio.nameSave}"
+		echo 合并[视频文件] ✔
+
+
+		echo 混流[音视频文件]
+		ffmpeg -y -v quiet -i ".\\${I.audio.nameSave}" -i ".\\${I.audio.nameSave}" -vcodec copy -acodec copy ".\\${I.nameMixin}"
+		echo 混流[音视频文件] ✔
+
+		echo 移除[音视频文件]
+		del ".\\${I.audio.nameSave}.part*"
+		del ".\\${I.audio.nameSave}"
+		del ".\\${I.audio.nameSave}"
+		echo 移除[音视频文件] ✔
+
+		echo 删除脚本自身
+		del %0
+		echo 删除脚本自身 ✔
+		`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
+	))]));
+
+	boxMain.appendChild(a);
 };
-const onClickDown = async (p_, isCloseAfterDownload) => {
+
+
+const download = async (p_, isCloseAfterDownload) => {
 	G.log('download-start', '...');
+
+
+	const I = {};
+
 
 	const source = unsafeWindow.__playinfo__.data.dash;
 	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
@@ -363,148 +378,69 @@ const onClickDown = async (p_, isCloseAfterDownload) => {
 
 	const state = __INITIAL_STATE__;
 
-	const slot = state.bvid ||
+	const slot = I.slot = state.bvid ||
 		location.pathname.replace(/\/$/, '')
 			.replace('/bangumi/play/', '')
 			.replace('/video/', '');
 
-	const title = state.h1Title ?? state?.videoData?.title ?? '未知标题';
-	const uid = state?.upData?.mid ?? '0';
+	const title = I.title = state.h1Title ?? state?.videoData?.title ?? '未知标题';
+	const uid = I.uid = state?.upData?.mid ?? '0';
 
-	const p = p_ ?? state?.p;
+	const p = I.p = p_ ?? state?.p;
 	const pages = state?.videoData?.pages;
-	const part = pages?.find(page => page.page == p)?.part;
+	const part = I.part = pages?.find(page => page.page == p)?.part;
 
 
 	const namePrefix = `bilibili@${uid}@${slot}@${title}` + (pages?.length > 1 ? `@p${p}@${part}` : '');
 
-	const urlVideo = video.baseUrl;
-	const nameVideo = 'video.m4s';
-	const nameVideoSave = `${namePrefix}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
+	I.nameMixin = `${namePrefix}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
 
-	const urlAudio = audio.baseUrl;
-	const nameAudio = 'audio.m4s';
-	const nameAudioSave = `${namePrefix}@audio.m4s`.replace(/[~/]/g, '_');
+	I.video = {};
+	I.video.url = video.baseUrl;
+	I.video.nameLog = '视频';
+	I.video.nameSave = `${namePrefix}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
+	I.video.size = await fetchMediaSize(I.video.url);
 
-	const nameMixin = `${namePrefix}@${video.height}p@${video.bandwidth}.mp4`.replace(/[~/]/g, '_');
-
-
-	const sizeVideo = await fetchMediaSize(urlVideo);
-	const sizeAudio = await fetchMediaSize(urlAudio);
-
-
-	const modeSafe = localStorage.getItem('bilibili-media-download/save-mode') == 'direct' || sizeVideo > sizeVideoMax
-		? 'direct'
-		: 'mixin';
+	I.audio = {};
+	I.audio.url = audio.baseUrl;
+	I.audio.nameLog = '音频';
+	I.audio.nameSave = `${namePrefix}@audio.m4s`.replace(/[~/]/g, '_');
+	I.audio.size = await fetchMediaSize(I.audio.url);
 
 
-	const { initer, boxDown } = openDBox(title);
+	const { initer, boxMain } = openNoty(title);
 
+	const modeSave = I.video.size > sizeVideoMax || localStorage.getItem(`${namePackage}/save-mode`) == 'direct' ? 'direct' : 'mixin';
+	if('mixin' == modeSave) {
+		const boxes = initer(2);
 
-	if('mixin' == modeSafe) {
-		const { progs, textsProg } = initer(2);
+		const datasVideo = await downloadMediaData(I.video, boxes[0]);
+		const datasAudio = await downloadMediaData(I.audio, boxes[1]);
 
-		const dataVideo = mediasFinal.video = await downloadMedia(urlVideo, nameVideo, nameVideoSave, progs[0], textsProg[0]);
-
-		mediasFinal.audio = await downloadMedia(urlAudio, nameAudio, nameAudioSave, progs[1], textsProg[1], dataVideo === symbolOverSize);
-
-		if(ffmpeg.isLoaded()) { mixinMedia(nameMixin, isCloseAfterDownload); }
+		if(ffmpeg.isLoaded()) { mixinMediaData(datasVideo, datasAudio, I.nameMixin, isCloseAfterDownload); }
 	}
-	else if('direct' == modeSafe) {
-		const ranges = makeRangesBySize(sizeVideo, sizeArrayBufferMax);
-
-		const { progs, textsProg } = initer(ranges.length + 1);
-
-		ranges.forEach(([range, sizeRange], index) => {
-			const nameVideoPartSave = nameVideoSave + `.part${index + 1}`;
-
-			const prog = progs[index];
-			const textProg = textsProg[index];
-
-
-			initSave(urlVideo, nameVideoPartSave, prog, textProg, `视频${String(index + 1).padStart(2, '0')}`, sizeRange, range);
-		});
-
-
-		initSave(urlAudio, nameAudioSave, progs[progs.length - 1], textsProg[textsProg.length - 1], '音频', sizeAudio);
-
-
-
-		const a = createSaveLink('[下载合并脚本]', '', `合并 ${nameMixin}.bat`);
-		a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(`
-			echo 合并[视频文件]
-			copy /B ".\\${nameVideoSave}.part*" ".\\${nameVideoSave}"
-			echo 合并[视频文件] ✔
-
-
-			echo 混流[音视频文件]
-			ffmpeg -y -v quiet -i ".\\${nameVideoSave}" -i ".\\${nameAudioSave}" -vcodec copy -acodec copy ".\\${nameMixin}"
-			echo 混流[音视频文件] ✔
-
-			echo 移除[音视频文件]
-			del ".\\${nameVideoSave}.part*"
-			del ".\\${nameVideoSave}"
-			del ".\\${nameAudioSave}"
-			echo 移除[音视频文件] ✔
-
-			echo 删除脚本自身
-			del %0
-			echo 删除脚本自身 ✔
-			`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
-		))]));
-		// a.click();
-
-		boxDown.appendChild(a);
+	else if('direct' == modeSave) {
+		makeDownloadButton(I, initer, boxMain);
 	}
 };
 
 
-const initButton = () => {
+const initDownloadButton = () => {
 	const buttonSetting = document.querySelector('.bpx-player-dm-setting');
 
 	if(buttonSetting) {
 		const buttonDown = buttonSetting.cloneNode(true);
 		buttonSetting.parentNode.insertBefore(buttonDown, buttonSetting.nextElementSibling);
-		// document.body.appendChild(buttonDown);
+
 
 		const svg = buttonDown.querySelector('svg');
 		svg.setAttribute('viewBox', '0 -5 26 36');
 		svg.innerHTML = '<polygon points="12.732,26 25.464,13.27 18.026,13.27 18.026,0 7.438,0 7.438,13.27 0,13.27" />';
 
-		buttonDown.classList.add('nz-tmd-button');
+		buttonDown.classList.add(`${namePackage}-download-button`);
 		buttonDown.title = '下载';
 
 		return buttonDown;
-	}
-};
-
-
-let ffmpegLoad;
-try {
-	ffmpegLoad = FFmpeg.createFFmpeg({ log: false });
-}
-catch(error) { G.error(error.message ?? error); }
-
-const ffmpeg = ffmpegLoad;
-
-
-const mixinMedia = async (nameFile, isCloseAfterDownload) => {
-	ffmpeg.FS('writeFile', 'video.m4s', mediasFinal.video);
-	ffmpeg.FS('writeFile', 'audio.m4s', mediasFinal.audio);
-
-	await ffmpeg.run('-y', '-v', 'quiet', '-i', 'video.m4s', '-i', 'audio.m4s', '-vcodec', 'copy', '-acodec', 'copy', 'output.mp4');
-
-	const dataFinal = ffmpeg.FS('readFile', 'output.mp4');
-
-	const a = document.createElement('a');
-	a.download = nameFile;
-	a.href = URL.createObjectURL(new Blob([dataFinal]));
-	a.click();
-
-	G.log('save-mixin-media', '✔', a.download);
-
-	if(isCloseAfterDownload) {
-		setTimeout(() => window.close(), 1000 * 5);
 	}
 };
 
@@ -513,31 +449,33 @@ const mixinMedia = async (nameFile, isCloseAfterDownload) => {
 	try {
 		await ffmpeg.load();
 
-		G.log('load-ffmpeg', '✔');
+		G.log('init-ffmpeg', '✔');
 	}
-	catch(error) { G.error('load-ffmpeg', '✖', error.message ?? error); }
+	catch(error) { G.error('init-ffmpeg', '✖', error.message, error.stack); }
 
 
-	new MutationObserver(() => {
+	const observer = new MutationObserver(() => {
 		try {
-			if(!document.querySelector('.nz-tmd-button')) {
-				const buttonDown = initButton();
+			if(!document.querySelector(`.${namePackage}-download-button`)) {
+				const buttonDownload = initDownloadButton();
 
-				if(buttonDown) {
-					buttonDown.addEventListener('click', event => (
+				if(buttonDownload) {
+					buttonDownload.addEventListener('click', event => (
 						event.stopPropagation(),
-						onClickDown()
+						download()
 					));
 
-					G.log('add-download-button', '✔');
-				}
+					G.log('init-download-button', '✔');
 
-				const pAutoDownload = new URLSearchParams(location.search).get('bilibili-media-download-auto-download');
-				if(pAutoDownload) { onClickDown(~~pAutoDownload, true); }
+
+					const pAutoDownload = new URLSearchParams(location.search).get(`${namePackage}-auto-download`);
+					if(pAutoDownload) { download(~~pAutoDownload, true); }
+
+					observer.disconnect();
+				}
 			}
 		}
-		catch(error) {
-			G.error(error.message, error.stack);
-		}
-	}).observe(document.body, { childList: true, subtree: true });
+		catch(error) { G.error('init-download-button', '✖', error.message, error.stack); }
+	});
+	observer.observe(document.body, { childList: true, subtree: true });
 })();

@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"module": "None",
+		"moduleDetection": "force",
 		"experimentalDecorators": true
 	},
 	"exclude": [
