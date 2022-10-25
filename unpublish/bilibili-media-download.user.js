@@ -416,24 +416,24 @@ const onClickDown = async (p_, isCloseAfterDownload) => {
 		const { progs, textsProg } = initer(ranges.length + 1);
 
 		ranges.forEach(([range, sizeRange], index) => {
-			const nameVideoPart = nameVideo + `.part${index + 1}`;
+			const nameVideoPartSave = nameVideoSave + `.part${index + 1}`;
 
 			const prog = progs[index];
 			const textProg = textsProg[index];
 
 
-			initSave(urlVideo, nameVideoPart, prog, textProg, `视频${String(index + 1).padStart(2, '0')}`, sizeRange, range);
+			initSave(urlVideo, nameVideoPartSave, prog, textProg, `视频${String(index + 1).padStart(2, '0')}`, sizeRange, range);
 		});
 
 
-		initSave(urlAudio, nameAudio, progs[progs.length - 1], textsProg[textsProg.length - 1], '音频', sizeAudio);
+		initSave(urlAudio, nameAudioSave, progs[progs.length - 1], textsProg[textsProg.length - 1], '音频', sizeAudio);
 
 
 
 		const a = createSaveLink('[下载合并脚本]', '', `合并 ${nameMixin}.bat`);
 		a.href = URL.createObjectURL(new Blob([new Uint8Array(GBK.encode(`
 			echo 合并[视频文件]
-			copy /B ".\\${nameMixin}.part*" ".\\${nameMixin}"
+			copy /B ".\\${nameVideoSave}.part*" ".\\${nameVideoSave}"
 			echo 合并[视频文件] ✔
 
 
@@ -442,6 +442,7 @@ const onClickDown = async (p_, isCloseAfterDownload) => {
 			echo 混流[音视频文件] ✔
 
 			echo 移除[音视频文件]
+			del ".\\${nameVideoSave}.part*"
 			del ".\\${nameVideoSave}"
 			del ".\\${nameAudioSave}"
 			echo 移除[音视频文件] ✔
