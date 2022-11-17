@@ -203,9 +203,9 @@ const createSaveLink = (innerHTML, download, href, title) => {
 
 	a.innerHTML = innerHTML;
 
-	if(a.download) { a.download = download; }
-	if(a.href) { a.href = href; }
-	if(a.title) { a.title = title; }
+	if(download) { a.download = download; }
+	if(href) { a.href = href; }
+	if(title) { a.title = title; }
 
 	return a;
 };
