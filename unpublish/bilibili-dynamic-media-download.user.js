@@ -103,15 +103,6 @@ GM_addStyle(`
 	}
 `);
 
-GM_addStyle(`
-	[${namePackage}] {
-		cursor: pointer !important;
-	}
-	[${namePackage}]>[download-button]:hover {
-		color: #72d5fb;
-	}
-`);
-
 
 const notyf = new Notyf({
 	duration: 0,
@@ -143,6 +134,7 @@ const innerHTMLFile = `
 	<div class="inline" download-size>未知大小</div>
 	<a class="inline" save-button>下载中...</a>
 `;
+
 /**
  * 初始化下载浮窗
  * @param {string} titleMain
@@ -354,7 +346,7 @@ const downloadData = async (info, box, isSaveImmediate = false) => {
  * 下载媒体
  * @param {number} idDynamic
  */
-const download = async (idDynamic) => {
+const download = async idDynamic => {
 	G.log('download-start', '...');
 
 	const dynamic = await (await fetch(`https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=${idDynamic}`)).json();
@@ -377,6 +369,16 @@ const download = async (idDynamic) => {
 };
 
 
+
+GM_addStyle(`
+	[${namePackage}] {
+		cursor: pointer !important;
+	}
+	[${namePackage}]>[download-button]:hover {
+		color: #72d5fb;
+	}
+`);
+
 /**
  * 初始化保存按钮
  * @param {Element} elTime
@@ -398,6 +400,7 @@ const initDownloadButton = elTime => {
 
 	elTime.querySelector('[download-button]').addEventListener('click', () => download(idDynamic));
 };
+
 
 
 // 监视dom变化
