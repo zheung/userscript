@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.1.0-2022.10.25.01
+// @version     1.1.1-2022.12.05.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -343,22 +343,22 @@ const makeDownloadButton = (I, initer, boxMain) => {
 		@echo off
 
 		echo 合并[视频文件]
-		copy /B ".\\${I.audio.nameSave}.part*" ".\\${I.audio.nameSave}"
-		echo 合并[视频文件] ✔
+		copy /B ".\\${I.video.nameSave}.part*" ".\\${I.video.nameSave}"
+		echo 合并[视频文件] ok
 
 		echo 混流[音视频文件]
-		ffmpeg -y -v quiet -i ".\\${I.audio.nameSave}" -i ".\\${I.audio.nameSave}" -vcodec copy -acodec copy ".\\${I.nameMixin}"
-		echo 混流[音视频文件] ✔
+		ffmpeg -y -v quiet -i ".\\${I.video.nameSave}" -i ".\\${I.audio.nameSave}" -vcodec copy -acodec copy ".\\${I.nameMixin}"
+		echo 混流[音视频文件] ok
 
-		echo 移除[音视频文件]
-		del ".\\${I.audio.nameSave}.part*"
-		del ".\\${I.audio.nameSave}"
-		del ".\\${I.audio.nameSave}"
-		echo 移除[音视频文件] ✔
+		@REM echo 移除[音视频文件]
+		@REM del ".\\${I.video.nameSave}.part*"
+		@REM del ".\\${I.video.nameSave}"
+		@REM del ".\\${I.audio.nameSave}"
+		@REM echo 移除[音视频文件] ok
 
-		echo 删除脚本自身
-		del %0
-		echo 删除脚本自身 ✔
+		@REM echo 删除脚本自身
+		@REM del %0
+		@REM echo 删除脚本自身 ok
 	`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
 	));
 

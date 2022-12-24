@@ -54,6 +54,8 @@ fisting:拳交
 paizuri:乳交
 clothed paizuri:衣服乳交
 multiple paizuri:多重乳交
+cunnilingus:舔阴
+fingering:指交
 tribadism:磨豆腐
 spanking:打屁股
 cbt:下体责罚
@@ -68,12 +70,13 @@ kissing:接吻
 parasite:寄生
 bondage:捆绑
 electric shocks:电击
-shibari:绳艺
 sumata:素股
 wrestling:摔跤
 no penetration:无插入
 milking:榨乳
 nipple stimulation:刺激乳头
+breast feeding:哺乳
+yaoi:男男性交
 
 
 ##行为细节
@@ -102,6 +105,7 @@ rape:强暴
 incest:乱伦
 prostitution:卖淫
 harem:后宫
+netorare:被寝取
 
 ## 性别关系
 ffm threesome:女女男
@@ -135,20 +139,28 @@ lactation:母乳
 ## 剧情物品
 blackmail:威胁信
 leash:锁
+filming:录像中
 
 
 # 角色
 
 ## 角色特征
 milf:熟女
-oppai loli:巨乳萝莉
-lolicon:萝莉控
+dilf:熟男
+bbm:胖男
+
+
 sister:姐妹
 twins:双胞胎
+
+tall girl:高挑女性
+oppai loli:巨乳萝莉
+lolicon:萝莉控
 shotacon:正太
 tomgirl:女性化男
 futanari:扶她
 shemale:人妖
+
 twintails:双马尾
 small breasts:贫乳
 big breasts:巨乳
@@ -165,6 +177,9 @@ onahole:人工阴道
 unusual pupils:奇怪的瞳孔
 beauty mark:美人痣
 hairy:阴毛
+big penis:巨根
+multiple penises:复数阴茎
+
 hair buns:丸子头
 
 ## 着装
@@ -185,7 +200,8 @@ bikini:比基尼
 glasses:眼镜
 collar:颈圈
 harness:拘束带
-schoolgirl uniform:校服
+schoolgirl uniform:女装校服
+schoolboy uniform:男装校服
 garter belt:吊带袜
 lingerie:性感内衣
 kimono:和服
@@ -197,6 +213,9 @@ thigh high boots:过膝靴
 chastity belt:贞操带
 nun:修女服
 straitjacket:拘束衣
+shibari:绳艺
+exposed clothing:露出的服装
+crossdressing:变装
 
 ## 角色
 maid:女仆
@@ -213,6 +232,7 @@ magical girl:魔法少女
 ## 物种
 minigirl:迷你娘
 
+demon:恶魔
 angel:天使
 fairy:妖精
 zombie:僵尸
@@ -237,6 +257,7 @@ giantess:巨大娘
 
 draenei:德莱尼
 harpy:哈比
+monster:怪兽
 
 ## 状态
 virginity:破处
@@ -247,21 +268,27 @@ blowjob face:口交颜
 impregnation:受精
 sweating:流汗
 pregnant:怀孕
+vaginal birth:阴道产出
 gaping:事后扩张
 prolapse:垂脱
+breast expansion:乳房膨胀
 drunk:醉
 feminization:女性化
 inflation:胃膨胀
 cumflation:精液满腹
 mind break:精神崩坏
+mind control:精神控制
 stomach deformation:胃突出
 dick growth:阴茎强勃
-crossdressing:变装
 petrification:石化
+gender change:性别转换
 amputee:截肢
 tanlines:晒痕
 crotch tattoo:淫纹
 smell:剧臭
+corruption:恶堕
+phimosis:包茎
+transformation:变化
 
 ## 性格
 bisexual:双性恋
