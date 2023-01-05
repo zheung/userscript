@@ -1,15 +1,19 @@
 // ==UserScript==
-// @name      Twitter Media Download
-// @namespace https://danor.app/
-// @version   0.4.3-20230103
-// @author    Nuogz
-// @grant     GM_getResourceText
-// @grant     GM_addStyle
-// @require   https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
-// @resource  notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
-// @match     https://twitter.com/*
+// @name        twitter-media-download
+// @description as the title
+// @namespace   https://danor.app/
+// @version     1.4.3-20230103
+// @author      Nuogz
+// @grant       GM_getResourceText
+// @grant       GM_addStyle
+// @require     https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
+// @resource    notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
+// @match       *://twitter.com/*
 // ==/UserScript==
+
 /* global Notyf */
+
+
 
 GM_addStyle(GM_getResourceText('notyf_css'));
 GM_addStyle(`
