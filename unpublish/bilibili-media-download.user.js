@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.1.1-2022.12.05.01
+// @version     1.2.0-2022.12.24.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -267,9 +267,14 @@ const downloadMediaData = async (II, box) => {
 
 const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDownload) => {
 	ffmpeg.FS('writeFile', 'video.m4s', datasVideo);
-	ffmpeg.FS('writeFile', 'audio.m4s', datasAudio);
+	if(datasAudio) {
+		ffmpeg.FS('writeFile', 'audio.m4s', datasAudio);
+	}
 
-	await ffmpeg.run('-y', '-v', 'quiet', '-i', 'video.m4s', '-i', 'audio.m4s', '-vcodec', 'copy', '-acodec', 'copy', 'output.mp4');
+	await ffmpeg.run('-y', '-v', 'quiet',
+		'-i', 'video.m4s',
+		...(datasAudio ? ['-i', 'audio.m4s'] : []),
+		'-vcodec', 'copy', '-acodec', 'copy', 'output.mp4');
 
 	const datasMixin = ffmpeg.FS('readFile', 'output.mp4');
 
@@ -333,8 +338,9 @@ const makeDownloadButton = (I, initer, boxMain) => {
 		initSaver(I.video.url, nameVideoPartSave, boxes[index], `${I.video.nameLog}${String(index + 1).padStart(2, '0')}`, sizeRange, range);
 	});
 
-
-	initSaver(I.audio.url, I.audio.nameSave, boxes[boxes.length - 1], I.audio.nameLog, I.audio.size);
+	if(I.audio) {
+		initSaver(I.audio.url, I.audio.nameSave, boxes[boxes.length - 1], I.audio.nameLog, I.audio.size);
+	}
 
 
 
@@ -347,20 +353,19 @@ const makeDownloadButton = (I, initer, boxMain) => {
 		echo 合并[视频文件] ok
 
 		echo 混流[音视频文件]
-		ffmpeg -y -v quiet -i ".\\${I.video.nameSave}" -i ".\\${I.audio.nameSave}" -vcodec copy -acodec copy ".\\${I.nameMixin}"
+		ffmpeg -y -v quiet -i ".\\${I.video.nameSave}" ${I.audio ? `-i ".\\${I.audio.nameSave}" ` : ''}-vcodec copy -acodec copy ".\\${I.nameMixin}"
 		echo 混流[音视频文件] ok
 
 		@REM echo 移除[音视频文件]
 		@REM del ".\\${I.video.nameSave}.part*"
 		@REM del ".\\${I.video.nameSave}"
-		@REM del ".\\${I.audio.nameSave}"
+		${I.audio ? `@REM del ".\\${I.audio.nameSave}"` : ''}
 		@REM echo 移除[音视频文件] ok
 
 		@REM echo 删除脚本自身
 		@REM del %0
 		@REM echo 删除脚本自身 ok
-	`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')
-	));
+	`.replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')));
 
 	const nameMinxinSave = `bilibili@${I.uid}@${I.slot}.mixin.bat`;
 
@@ -390,7 +395,7 @@ const download = async (p_, isCloseAfterDownload) => {
 
 	const source = unsafeWindow.__playinfo__.data.dash;
 	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
-	const audio = source.audio.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
+	const audio = source.audio ? source.audio.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0] : null;
 
 	const state = __INITIAL_STATE__;
 
@@ -417,11 +422,13 @@ const download = async (p_, isCloseAfterDownload) => {
 	I.video.nameSave = `${namePrefix}@video@${video.height}p.m4s`.replace(/[~/]/g, '_');
 	I.video.size = await fetchMediaSize(I.video.url);
 
-	I.audio = {};
-	I.audio.url = audio.baseUrl;
-	I.audio.nameLog = '音频';
-	I.audio.nameSave = `${namePrefix}@audio.m4s`.replace(/[~/]/g, '_');
-	I.audio.size = await fetchMediaSize(I.audio.url);
+	if(audio) {
+		I.audio = {};
+		I.audio.url = audio.baseUrl;
+		I.audio.nameLog = '音频';
+		I.audio.nameSave = `${namePrefix}@audio.m4s`.replace(/[~/]/g, '_');
+		I.audio.size = await fetchMediaSize(I.audio.url);
+	}
 
 
 	const { initer, boxMain } = openNoty(`● ${I.title}`);
@@ -431,7 +438,7 @@ const download = async (p_, isCloseAfterDownload) => {
 		const boxes = initer(2);
 
 		const datasVideo = await downloadMediaData(I.video, boxes[0]);
-		const datasAudio = await downloadMediaData(I.audio, boxes[1]);
+		const datasAudio = audio ? await downloadMediaData(I.audio, boxes[1]) : null;
 
 		if(ffmpeg.isLoaded()) { mixinMediaData(datasVideo, datasAudio, I.nameMixin, isCloseAfterDownload); }
 	}

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Twitter Media Download
 // @namespace https://danor.app/
-// @version   0.4.2-20210225
+// @version   0.4.3-20230103
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -46,6 +46,13 @@ GM_addStyle(`
 	.nz-tmd-notify progress::-webkit-progress-value {
 		background: #17bf63;
 		border-radius: 4px;
+	}
+
+	.nz-tmd-hover1 {
+		background-color: rgba(255, 87, 34, 0.1);
+	}
+	.nz-tmd-hover2 {
+		color: rgb(255, 87, 34);
 	}
 `);
 
@@ -221,20 +228,23 @@ const onClickDown = async function(event) {
 	});
 };
 
-const initButton = function(divOper) {
-	const divShare = divOper.children[3];
+/**
+ * @param {Element} divOper
+ */
+const initButton = divOper => {
+	const divShare = divOper.lastChild;
 
+	/** @type {Element} */
 	const divDown = divShare.cloneNode(true);
 	divDown.classList.add('nz-tmd-button');
-	divOper.insertBefore(divDown, divShare);
+	divOper.appendChild(divDown);
+
 
 	const svgDown = divDown.querySelector('svg');
-	const gDown = svgDown.querySelector('g');
-	const path1Down = gDown.querySelector('path');
-	const path2Down = path1Down.cloneNode();
-	gDown.appendChild(path2Down);
-	path1Down.setAttribute('d', 'M11.47 14.53c.146.146.338.22.53.22s.384-.073.53-.22l5-5c.293-.293.293-.768 0-1.06s-.768-.294-1.06 0l-3.72 3.72V2c0-.414-.337-.75-.75-.75s-.75.336-.75.75v10.19L7.53 8.47c-.293-.293-.768-.293-1.06 0s-.294.768 0 1.06l5 5z');
-	path2Down.setAttribute('d', 'M21.25 13.25c-.414 0-.75.336-.75.75v5.652c0 .437-.355.792-.792.792H4.292c-.437 0-.792-.355-.792-.792V14c0-.414-.336-.75-.75-.75S2 13.586 2 14v5.652c0 1.264 1.028 2.292 2.292 2.292h15.416c1.264 0 2.292-1.028 2.292-2.292V14c0-.414-.336-.75-.75-.75z');
+	const pathDown = svgDown.querySelector('path');
+
+	pathDown.setAttribute('d', 'M12,16l-5.7-5.7l1.4-1.4l3.3,3.3V2.6h2v9.6l3.3-3.3l1.4,1.4L12,16z M21,15l0,3.5c0,1.4-1.1,2.5-2.5,2.5h-13 C4.1,21,3,19.9,3,18.5V15h2v3.5C5,18.8,5.2,19,5.5,19h13c0.3,0,0.5-0.2,0.5-0.5l0-3.5H21z');
+
 
 	divDown.children[0].removeAttribute('aria-label');
 	divDown.children[0].removeAttribute('role');
@@ -242,37 +252,66 @@ const initButton = function(divOper) {
 	divDown.children[0].removeAttribute('data-testid');
 	divDown.children[0].children[0].removeAttribute('dir');
 
+
 	divDown.addEventListener('mouseover', event => {
 		event.stopPropagation();
 
-		divDown.children[0].children[0].style.color = 'rgba(214,214,0)';
-		divDown.children[0].children[0].children[0].children[0].style.backgroundColor = 'rgba(214,214,0,0.1)';
+
+		const classList1 = divDown.querySelector('.r-1niwhzg')?.classList;
+
+		if(classList1) {
+			classList1.add('nz-tmd-hover1');
+			classList1.remove('r-1niwhzg');
+		}
+
+
+		const classList2 = divDown.querySelector('.r-14j79pv')?.classList;
+
+		if(classList2) {
+			classList2.add('nz-tmd-hover2');
+			classList2.remove('r-14j79pv');
+		}
 	});
 	divDown.addEventListener('mouseleave', event => {
 		event.stopPropagation();
 
-		divDown.children[0].children[0].style.color = '';
-		divDown.children[0].children[0].children[0].children[0].style.backgroundColor = '';
+
+		const classList1 = divDown.querySelector('.nz-tmd-hover1')?.classList;
+
+		if(classList1) {
+			classList1.add('r-1niwhzg');
+			classList1.remove('nz-tmd-hover1');
+		}
+
+
+		const classList2 = divDown.querySelector('.nz-tmd-hover2')?.classList;
+
+		if(classList2) {
+			classList2.add('r-14j79pv');
+			classList2.remove('nz-tmd-hover2');
+		}
 	});
 
 	return divDown;
 };
 
+/**
+ * @param {Element} divOper
+ */
 const initButton2 = function(divOper) {
-	const divReply = divOper.children[0];
-	const divShare = divOper.children[3];
+	const divShare = divOper.lastChild;
 
-	const divDown = divReply.cloneNode(true);
+	/** @type {Element} */
+	const divDown = divShare.cloneNode(true);
 	divDown.classList.add('nz-tmd-button');
-	divOper.insertBefore(divDown, divShare);
+	divOper.appendChild(divDown);
+
 
 	const svgDown = divDown.querySelector('svg');
-	const gDown = svgDown.querySelector('g');
-	const path1Down = gDown.querySelector('path');
-	const path2Down = path1Down.cloneNode();
-	gDown.appendChild(path2Down);
-	path1Down.setAttribute('d', 'M11.47 14.53c.146.146.338.22.53.22s.384-.073.53-.22l5-5c.293-.293.293-.768 0-1.06s-.768-.294-1.06 0l-3.72 3.72V2c0-.414-.337-.75-.75-.75s-.75.336-.75.75v10.19L7.53 8.47c-.293-.293-.768-.293-1.06 0s-.294.768 0 1.06l5 5z');
-	path2Down.setAttribute('d', 'M21.25 13.25c-.414 0-.75.336-.75.75v5.652c0 .437-.355.792-.792.792H4.292c-.437 0-.792-.355-.792-.792V14c0-.414-.336-.75-.75-.75S2 13.586 2 14v5.652c0 1.264 1.028 2.292 2.292 2.292h15.416c1.264 0 2.292-1.028 2.292-2.292V14c0-.414-.336-.75-.75-.75z');
+	const pathDown = svgDown.querySelector('path');
+
+	pathDown.setAttribute('d', 'M12,16l-5.7-5.7l1.4-1.4l3.3,3.3V2.6h2v9.6l3.3-3.3l1.4,1.4L12,16z M21,15l0,3.5c0,1.4-1.1,2.5-2.5,2.5h-13 C4.1,21,3,19.9,3,18.5V15h2v3.5C5,18.8,5.2,19,5.5,19h13c0.3,0,0.5-0.2,0.5-0.5l0-3.5H21z');
+
 
 	divDown.children[0].removeAttribute('aria-expanded');
 	divDown.children[0].removeAttribute('aria-haspopup');
@@ -280,17 +319,44 @@ const initButton2 = function(divOper) {
 	divDown.children[0].removeAttribute('role');
 	divDown.children[0].removeAttribute('data-focusable');
 
+
 	divDown.addEventListener('mouseover', event => {
 		event.stopPropagation();
 
-		divDown.children[0].children[0].style.color = 'rgba(214,214,0)';
-		divDown.children[0].children[0].children[0].children[0].style.backgroundColor = 'rgba(214,214,0,0.1)';
+
+		const classList1 = divDown.querySelector('.r-1niwhzg')?.classList;
+
+		if(classList1) {
+			classList1.add('nz-tmd-hover1');
+			classList1.remove('r-1niwhzg');
+		}
+
+
+		const classList2 = divDown.querySelector('.r-14j79pv')?.classList;
+
+		if(classList2) {
+			classList2.add('nz-tmd-hover2');
+			classList2.remove('r-14j79pv');
+		}
 	});
 	divDown.addEventListener('mouseleave', event => {
 		event.stopPropagation();
 
-		divDown.children[0].children[0].style.color = '';
-		divDown.children[0].children[0].children[0].children[0].style.backgroundColor = '';
+
+		const classList1 = divDown.querySelector('.nz-tmd-hover1')?.classList;
+
+		if(classList1) {
+			classList1.add('r-1niwhzg');
+			classList1.remove('nz-tmd-hover1');
+		}
+
+
+		const classList2 = divDown.querySelector('.nz-tmd-hover2')?.classList;
+
+		if(classList2) {
+			classList2.add('r-14j79pv');
+			classList2.remove('nz-tmd-hover2');
+		}
 	});
 
 	return divDown;
