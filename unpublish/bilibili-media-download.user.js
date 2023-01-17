@@ -2,7 +2,7 @@
 // @name        bilibili-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.2.0-2022.12.24.01
+// @version     1.2.1-2023.01.17.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -41,11 +41,14 @@ const ffmpeg = ffmpegLoad;
 GM_addStyle(GM_getResourceText('notyf_css'));
 GM_addStyle(`
 	.${namePackage} {
+		top: 64px;
 		padding: 0px;
-		background: #1da1f2;
-		box-shadow: rgb(136 153 166 / 20%) 0px 0px 15px, rgb(136 153 166 / 15%) 0px 0px 3px 1px;
-		border-radius: 3px;
+		background: var(--bg1);
+		box-shadow: rgb(136 153 166 / 40%) 0px 0px 15px, rgb(136 153 166 / 40%) 0px 0px 3px 1px;
+		border-radius: 6px;
 		max-width: unset;
+		color: var(--text1);
+		overflow: hidden;
 	}
 
 	.${namePackage}>.notyf__wrapper {
@@ -53,14 +56,25 @@ GM_addStyle(`
 	}
 
 
-	.${namePackage} .inline {
-		display: inline-block;
-		vertical-align: top;
+	.${namePackage} [main] {
+		display: grid;
+		justify-items: end;
 	}
 
 
 	.${namePackage} [title-name] {
+		width: 100%;
 		margin-bottom: 5px;
+	}
+
+	.${namePackage} [list] {
+		display: grid;
+		grid-template-columns: auto auto auto;
+		grid-gap: 6px 20px;
+		align-items: center;
+	}
+	.${namePackage} [list]>* {
+		text-align: right;
 	}
 
 	.${namePackage} [proger] {
@@ -69,25 +83,25 @@ GM_addStyle(`
 	}
 
 	.${namePackage} [proger]::-webkit-progress-bar {
-		background-color: #ffffff;
-		border-radius: 3px;
+		border: 1px solid var(--brand_pink);
+		background-color: var(--bg1);
+		border-radius: 6px;
 	}
 	.${namePackage} [proger]::-webkit-progress-value {
-		background: #17bf63;
-		border-radius: 3px;
+		background: var(--brand_pink);
+		border-radius: 6px;
 	}
 
-	.${namePackage} [infoer] {
-		text-align: right;
-	}
-
-	.${namePackage} .save {
-		color: white;
+	.${namePackage} [saver] {
+		color: var(--text1);
 		text-decoration: none;
-		margin-left: 5px;
+	}
+	.${namePackage} [saver][_solo] {
+		grid-column: 1/4;
 	}
 
-	.${namePackage} [text-liner] {
+	.${namePackage} [messager] {
+		grid-column: 1/3;
 		text-align: right;
 		overflow: hidden;
 		white-space: nowrap;
@@ -109,19 +123,20 @@ const notyf = new Notyf({
 
 
 const domTextDBox = `
-<progress proger value="0" max="100"></progress>
-<div class="inline" infoer>准备中...</div><br>
+	<progress proger value="0" max="100"></progress>
+	<div infoer>准备中...</div>
+	<div linker></div>
 `;
 const openNoty = title => {
 	const idNoty = (Math.random() * 10000).toFixed(0);
 	const noty = notyf.open({
 		type: namePackage,
-		message: `<div id="${namePackage}-${idNoty}"><div title-name>${title} 准备中...</div><div main></div></div>`
+		message: `<div id="${namePackage}-${idNoty}" main><div title-name>${title} 准备中...</div><div list></div></div>`
 	});
 
 	const boxNoty = document.querySelector(`#${namePackage}-${idNoty}`);
 	const boxTitle = boxNoty.querySelector('div[title-name]');
-	const boxMain = boxNoty.querySelector('div[main]');
+	const boxMain = boxNoty.querySelector('div[list]');
 
 	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
 
@@ -199,7 +214,7 @@ const makeRangesBySize = (size, max) => {
 const createSaveLink = (innerHTML, download, href, title) => {
 	const a = document.createElement('a');
 
-	a.classList.add('inline', 'save');
+	a.setAttribute('saver', '');
 
 	a.innerHTML = innerHTML;
 
@@ -247,7 +262,9 @@ const downloadMediaData = async (II, box) => {
 
 
 		const linkMedia = createSaveLink(`[下载${II.nameLog}]`, II.nameSave, URL.createObjectURL(new Blob([datasMedia])));
+		infoer.parentNode.removeChild(infoer.nextElementSibling);
 		infoer.parentNode.insertBefore(linkMedia, infoer.nextElementSibling);
+
 
 		G.log('download-media', '✔', II.nameLog);
 
@@ -258,7 +275,7 @@ const downloadMediaData = async (II, box) => {
 		proger.hidden = true;
 
 		infoer.innerHTML = `
-			<div text-liner class="inline" style="width: 350px" title="${error.message ?? error}">${II.nameLog} error, ${error.message ?? error}</div>
+			<div messager title="${error.message ?? error}">${II.nameLog} error, ${error.message ?? error}</div>
 		`.replace(/\t|\n/g, '');
 
 		throw error;
@@ -295,6 +312,7 @@ const initSaver = (url, nameSave, box, what, sizeRange, range) => {
 	const [, infoer] = box;
 
 	const a = createSaveLink(`[下载${what}]`, nameSave, '', (range ? `${range}, ` : '') + `${renderSize(sizeRange)}`);
+	infoer.parentNode.removeChild(infoer.nextElementSibling);
 	infoer.parentNode.insertBefore(a, infoer.nextElementSibling);
 
 
@@ -306,7 +324,8 @@ const initSaver = (url, nameSave, box, what, sizeRange, range) => {
 
 
 		const headerGet = new Headers();
-		headerGet.append('Range', `bytes=${range}`);
+		if(range) { headerGet.append('Range', `bytes=${range}`); }
+
 		const requestGet = new Request(url, { headers: headerGet });
 		const responseGet = await fetch(requestGet);
 
@@ -369,7 +388,8 @@ const makeDownloadButton = (I, initer, boxMain) => {
 
 	const nameMinxinSave = `bilibili@${I.uid}@${I.slot}.mixin.bat`;
 
-	const a = createSaveLink('[下载合并脚本]');
+	const a = createSaveLink('[下载混流脚本]');
+	a.setAttribute('_solo', '');
 	boxMain.appendChild(a);
 
 	a.addEventListener('click', async () => {
