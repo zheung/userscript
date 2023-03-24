@@ -112,7 +112,7 @@ const openDBox = (id) => {
 
 
 const downloadMedia = async (media, tweet, user, prog, textProg) => {
-	const response = await fetch(media.url);
+	const response = await fetch(new Request(media.url, { cache: 'reload' }));
 	const reader = response.body.getReader();
 
 	const sizeTotal = +response.headers.get('Content-Length');

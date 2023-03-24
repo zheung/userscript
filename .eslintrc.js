@@ -2,9 +2,9 @@
 
 const rcBrowser = {
 	root: true,
-	env: { es2021: true, browser: true, greasemonkey: true },
+	env: { es2022: true, browser: true, greasemonkey: true },
 	extends: ['eslint:recommended'],
-	parserOptions: { sourceType: 'script', ecmaVersion: 13 },
+	parserOptions: { sourceType: 'script' },
 	rules: {
 		indent: [2, 'tab', { ignoreComments: true, SwitchCase: 1 }],
 		linebreakStyle: [2],

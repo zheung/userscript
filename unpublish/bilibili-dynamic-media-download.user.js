@@ -2,7 +2,7 @@
 // @name        bilibili-dynamic-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.0.0-2022.11.17.01
+// @version     1.1.0-2023.03.24.01
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -10,6 +10,7 @@
 // @require     https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
 // @resource    notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
 // @match       *://t.bilibili.com/*
+// @match       *://www.bilibili.com/opus/*
 // @match       *://space.bilibili.com/*/dynamic/*
 // ==/UserScript==
 
@@ -352,7 +353,7 @@ const download = async idDynamic => {
 	const dynamic = await (await fetch(`https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=${idDynamic}`)).json();
 
 	const urls = dynamic?.data?.item?.modules?.module_dynamic?.major?.draw?.items.map(item => item.src);
-	const author = dynamic.data.item.modules.module_author;
+	const author = dynamic?.data?.item?.modules?.module_author;
 
 	const boxes = openNoty(`下载 ${author.name}@${idDynamic}`).initer(urls.length);
 
@@ -371,7 +372,7 @@ const download = async idDynamic => {
 
 
 GM_addStyle(`
-	[${namePackage}] {
+	[${namePackage}]>[download-button] {
 		cursor: pointer !important;
 	}
 	[${namePackage}]>[download-button]:hover {
@@ -384,16 +385,16 @@ GM_addStyle(`
  * @param {Element} elTime
  */
 const initDownloadButton = elTime => {
-	const elMain = elTime.parentElement.parentElement.parentElement;
-
-	const elAlbum = elMain.querySelector('.bili-album');
-	const idDynamic = elAlbum?.attributes['dyn-id']?.value;
-
-
 	elTime.setAttribute(namePackage, '');
 
 
-	if(!idDynamic) { return; }
+	if(!document.querySelector('.bili-album')) { return; }
+
+
+	const idDynamic = location.pathname.split('/').pop();
+
+	if(!~~idDynamic) { return; }
+	console.log(idDynamic);
 
 
 	elTime.innerHTML = `<span>${elTime.innerHTML}</span>` + `<span download-button> 保存 </span>`;
@@ -406,7 +407,7 @@ const initDownloadButton = elTime => {
 // 监视dom变化
 const observer = new MutationObserver(() => {
 	try {
-		document.querySelectorAll(`.bili-dyn-time`)
+		document.querySelectorAll(`.bili-dyn-time, .opus-module-author__pub__text`)
 			.forEach(elTime => {
 				if(namePackage in elTime.attributes) { return; }
 

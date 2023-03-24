@@ -414,7 +414,7 @@ const download = async (p_, isCloseAfterDownload) => {
 
 
 	const source = unsafeWindow.__playinfo__.data.dash;
-	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0];
+	const video = source.video.slice().sort((a, b) => b.bandwidth - a.bandwidth).filter(v => ~v.codecs.indexOf('avc'))[0];
 	const audio = source.audio ? source.audio.slice().sort((a, b) => b.bandwidth - a.bandwidth)[0] : null;
 
 	const state = __INITIAL_STATE__;
