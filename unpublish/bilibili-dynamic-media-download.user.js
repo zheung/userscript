@@ -2,7 +2,7 @@
 // @name        bilibili-dynamic-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.1.0-2023.03.24.01
+// @version     1.1.1-2023.03.24.02
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -387,19 +387,29 @@ GM_addStyle(`
 const initDownloadButton = elTime => {
 	elTime.setAttribute(namePackage, '');
 
-
 	if(!document.querySelector('.bili-album')) { return; }
 
+	let idDynamic = location.pathname.split('/').pop();
 
-	const idDynamic = location.pathname.split('/').pop();
 
-	if(!~~idDynamic) { return; }
-	console.log(idDynamic);
+	if(!~~idDynamic) {
+		const elMain = elTime.parentElement.parentElement.parentElement;
+
+		const elAlbum = elMain.querySelector('.bili-album');
+		idDynamic = elAlbum?.attributes['dyn-id']?.value;
+
+		if(!~~idDynamic) { return; }
+	}
 
 
 	elTime.innerHTML = `<span>${elTime.innerHTML}</span>` + `<span download-button> 保存 </span>`;
 
-	elTime.querySelector('[download-button]').addEventListener('click', () => download(idDynamic));
+	elTime.querySelector('[download-button]').addEventListener('click', event => {
+		download(idDynamic);
+
+		event.preventDefault();
+		event.stopPropagation();
+	});
 };
 
 
