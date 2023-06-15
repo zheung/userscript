@@ -4,7 +4,7 @@ const rcBrowser = {
 	root: true,
 	env: { es2022: true, browser: true, greasemonkey: true },
 	extends: ['eslint:recommended'],
-	parserOptions: { sourceType: 'script' },
+	parserOptions: { sourceType: 'module' },
 	rules: {
 		indent: [2, 'tab', { ignoreComments: true, SwitchCase: 1 }],
 		linebreakStyle: [2],

@@ -1,0 +1,186 @@
+namePackage {
+	--colorMain: #fb001a;
+
+	position: fixed;
+	z-index: 9999;
+
+	font-size: 1.6rem;
+	font-family: 'Cascadia Code';
+
+	[show-button] {
+		position: fixed;
+		top: 10rem;
+		left: 0rem;
+
+		padding: 0.5rem 0.5rem;
+
+		background: white;
+		border: 0.2rem solid var(--colorMain);
+		border-left: none;
+		border-radius: 0 0.4rem 0.4rem 0;
+
+		font-size: 2rem;
+		line-height: 2rem;
+		color: var(--colorMain);
+
+		cursor: pointer;
+		user-select: none;
+
+
+		&:hover {
+			background: var(--colorMain);
+			color: white;
+		}
+	}
+
+	>dialog {
+		padding: 2rem;
+
+
+		border: none;
+		border-radius: 0.4rem;
+		outline: none;
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+
+
+		>[title] {
+			border-bottom: 1px solid lightgray;
+			padding-bottom: 1rem;
+			margin-bottom: 1rem;
+
+			color: var(--colorMain);
+			font-size: 2rem;
+			font-weight: bold;
+		}
+
+		>[sub-title] {
+			border-bottom: 1px solid lightgray;
+			padding-bottom: 1rem;
+			margin-top: 1rem;
+			margin-bottom: 1rem;
+
+			font-size: 1.8rem;
+		}
+
+
+		>[formats] {
+			display: block;
+
+			width: 100%;
+			height: 4rem;
+
+			margin-bottom: 2rem;
+
+			line-height: 4rem;
+			white-space: nowrap;
+
+			>span {
+				display: inline-block;
+
+				width: 15rem;
+			}
+
+			>select {
+				display: inline-block;
+
+				width: 40rem;
+
+				outline: none;
+				border: none;
+				border-bottom: 2px solid;
+
+
+				font-size: inherit;
+				font-family: inherit;
+
+
+				>option[disabled] {
+					color: lightgray;
+				}
+			}
+
+		}
+
+		& download-button, & [task-save] {
+			display: inline-block;
+
+			box-sizing: border-box;
+			height: 4rem;
+			line-height: 4rem;
+			padding: 0rem 1rem;
+
+			border: 2px solid var(--colorMain);
+			border-radius: 0.4rem;
+
+			color: white;
+			background: var(--colorMain);
+
+			cursor: pointer;
+			user-select: none;
+
+
+			&:not([disable]):hover {
+				box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+			}
+
+			&[disable] {
+				cursor: not-allowed;
+				filter: brightness(0.7);
+			}
+		}
+
+
+		>[tasks] {
+			>task {
+				display: block;
+
+				[task-title], [task-progress], [task-percent], [task-save] {
+					display: inline-block;
+					vertical-align: top;
+
+					height: 4rem;
+					margin-bottom: 2rem;
+
+					line-height: 4rem;
+					white-space: nowrap;
+				}
+
+				[task-title] {
+					width: 20rem;
+				}
+
+				[task-progress] {
+					width: 20.5rem;
+					appearance: none;
+
+					&::-webkit-progress-bar {
+						position: relative;
+
+						top: 25%;
+						height: 50%;
+
+						border-radius: 0.4rem;
+
+						background-color: lightgray;
+					}
+
+					&::-webkit-progress-value {
+						border-radius: 0.4rem;
+
+						background: var(--colorMain);
+					}
+				}
+
+				[task-percent] {
+					width: 20rem;
+				}
+
+				[task-save] {
+					float: right;
+
+					width: 6rem;
+				}
+			}
+		}
+	}
+}

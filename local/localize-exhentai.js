@@ -69,6 +69,7 @@ rimjob:舔肛
 kissing:接吻
 parasite:寄生
 bondage:捆绑
+bdsm:BDSM
 electric shocks:电击
 sumata:素股
 wrestling:摔跤
@@ -77,7 +78,11 @@ milking:榨乳
 nipple stimulation:刺激乳头
 breast feeding:哺乳
 yaoi:男男性交
-
+snuff:被杀害
+torture:拷问
+unbirth:逆出生
+forniphilia:人间家具
+smoking:性交中吸烟
 
 ##行为细节
 wormhole:虫洞交
@@ -98,6 +103,9 @@ scat:排粪
 eggs:产卵
 urination:放尿
 farting:放屁
+crying:哭泣
+coprophagia:食粪
+piss drinking:喝尿
 
 # 关系
 femdom:女主调教
@@ -131,10 +139,12 @@ strap-on:假阴茎
 machine:机械
 gag:口球
 tentacles:触手
+makeup:化妆品
 
 ## 人体产物
 smegma:包皮垢
 lactation:母乳
+saliva:唾液
 
 ## 剧情物品
 blackmail:威胁信
@@ -149,6 +159,8 @@ milf:熟女
 dilf:熟男
 bbm:胖男
 
+minigirl:迷你娘
+miniguy:迷你男
 
 sister:姐妹
 twins:双胞胎
@@ -167,7 +179,9 @@ big breasts:巨乳
 huge breasts:豪乳
 gigantic breasts:爆乳
 big areolae:巨乳晕
+big ass:巨臀
 wings:翅膀
+very long hair:超长发
 tail:尾巴
 kemonomimi:兽耳
 dark skin:黑皮肤
@@ -221,6 +235,7 @@ crossdressing:变装
 maid:女仆
 teacher:教师
 policewoman:女警
+nurse:护士
 gothic lolita:哥特萝莉
 slave:奴隶
 witch:女巫
@@ -289,6 +304,8 @@ smell:剧臭
 corruption:恶堕
 phimosis:包茎
 transformation:变化
+asphyxiation:窒息
+stuck in wall:卡墙
 
 ## 性格
 bisexual:双性恋
