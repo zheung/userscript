@@ -9,8 +9,8 @@
 // @grant       unsafeWindow
 // @require     https://cdn.jsdelivr.net/npm/gbk.js@0.3.0/dist/gbk2.min.js
 // @match       *://www.youtube.com/watch*
-// @resource    html file:///d%3A/project/userscript/unpublish/youtube-media-download.user.html
-// @resource    css file:///d%3A/project/userscript/unpublish/youtube-media-download.user.css
+// @resource    html ./youtube-media-download.user.html
+// @resource    css ./youtube-media-download.user.css
 // ==/UserScript==
 
 // eslint-disable-next-line no-unused-vars

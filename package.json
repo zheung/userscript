@@ -1,11 +1,18 @@
 {
-	"name": "userscript",
-	"version": "1.0.0",
-	"description": "",
-	"author": "Nuogz",
+	"name": "@danor/userscript",
+	"version": "1.1.0",
+	"description": "DanoR's userscript",
+	"author": "DanoR",
+	"license": "LGPL-3.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "github:zheung/userscript"
+	},
+	"type": "module",
+	"private": true,
 	"devDependencies": {
-		"@types/tampermonkey": "^4.0.5",
-		"@types/wicg-file-system-access": "^2020.9.5",
-		"eslint": "^8.26.0"
+		"@types/tampermonkey": "^4.0.10",
+		"@types/wicg-file-system-access": "^2020.9.6",
+		"eslint": "^8.42.0"
 	}
 }
