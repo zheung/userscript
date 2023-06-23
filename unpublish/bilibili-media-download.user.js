@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        bilibili-media-download
-// @description as the title
+// @description 2023.06.23.16
 // @namespace   https://danor.app/
-// @version     1.2.1-2023.01.17.01
-// @author      Nuogz
+// @version     1.2.2
+// @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
 // @grant       unsafeWindow
-// @require     https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
-// @require     https://cdn.jsdelivr.net/npm/gbk.js@0.3.0/dist/gbk2.min.js
-// @require     https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js
-// @resource    notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
+// @require     https://www.unpkg.com/notyf@3/notyf.min.js
+// @require     https://www.unpkg.com/gbk.js@0.3.0/dist/gbk2.min.js
+// @require     https://www.unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js
+// @resource    notyf_css https://www.unpkg.com/notyf@3/notyf.min.css
 // @match       *://*.bilibili.com/bangumi/play/*
 // @match       *://*.bilibili.com/video/*
 // ==/UserScript==
@@ -227,9 +227,13 @@ const createSaveLink = (innerHTML, download, href, title) => {
 
 
 const fetchMediaSize = async url => {
-	const responseSize = await fetch(new Request(url, { method: 'HEAD', }));
+	const controller = new AbortController();
+
+	const responseSize = await fetch(new Request(url, { method: 'GET', signal: controller.signal }));
 
 	const size = +responseSize.headers.get('Content-Length');
+
+	controller.abort();
 
 	return size;
 };
