@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name        twitter-media-download
-// @description as the title
+// @description 2023.07.17 14
 // @namespace   https://danor.app/
-// @version     1.4.3-20230103
-// @author      Nuogz
+// @version     1.5.0
+// @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
-// @require     https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js
-// @resource    notyf_css https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css
+// @require     https://unpkg.com/notyf@3/notyf.min.js
+// @resource    notyf_css https://unpkg.com/notyf@3/notyf.min.css
 // @match       *://twitter.com/*
 // ==/UserScript==
 
@@ -141,23 +141,51 @@ const downloadMedia = async (media, tweet, user, prog, textProg) => {
 	const a = document.createElement('a');
 	a.classList.add('save');
 	a.innerHTML = 'Save';
-	a.download = `Twitter@${user.screen_name}@${tweet.id_str}@${media.sort}@${media.name}`;
+	a.download = `twitter@${user.screen_name}@${tweet.id_str}@${media.sort + 1}@${media.name}`;
 	a.href = URL.createObjectURL(new Blob([datasMedia]));
 	textProg.parentNode.insertBefore(a, textProg.nextElementSibling.nextElementSibling);
 	a.click();
 
-	console.log(`Saved: ${a.download}`);
+	globalThis.console.log(`Saved: ${a.download}`);
 };
 
-const onClickDown = async function(event) {
-	event.stopPropagation();
 
-	const tid = (this.querySelector('a[href*="/status/"]').href.match(/\/status\/(\d+)/) || [])[1];
+const downloadTweetMedia = async idTweet => {
 	const ct0 = (document.cookie.match(/ct0=(.*?); /) || [])[1];
 
-	const { noty, initer } = openDBox(tid);
+	const { noty, initer } = openDBox(idTweet);
 
-	const response = await fetch(`https://twitter.com/i/api/2/timeline/conversation/${tid}.json?tweet_mode=extended`, {
+	const url = new URL('https://twitter.com/i/api/graphql/-Ls3CrSQNo2fRKH6i6Na1A/TweetDetail');
+	url.searchParams.set('variables', JSON.stringify({
+		'focalTweetId': idTweet,
+		'includePromotedContent': true,
+		'withBirdwatchNotes': true,
+		'withVoice': true
+	}));
+	url.searchParams.set('features', JSON.stringify({
+		'creator_subscriptions_tweet_preview_api_enabled': true,
+		'freedom_of_speech_not_reach_fetch_enabled': true,
+		'graphql_is_translatable_rweb_tweet_is_translatable_enabled': true,
+		'longform_notetweets_consumption_enabled': true,
+		'longform_notetweets_inline_media_enabled': true,
+		'longform_notetweets_rich_text_read_enabled': true,
+		'responsive_web_edit_tweet_api_enabled': true,
+		'responsive_web_enhance_cards_enabled': false,
+		'responsive_web_graphql_exclude_directive_enabled': true,
+		'responsive_web_graphql_skip_user_profile_image_extensions_enabled': false,
+		'responsive_web_graphql_timeline_navigation_enabled': true,
+		'responsive_web_media_download_video_enabled': false,
+		'responsive_web_twitter_article_tweet_consumption_enabled': false,
+		'rweb_lists_timeline_redesign_enabled': true,
+		'standardized_nudges_misinfo': true,
+		'tweet_awards_web_tipping_enabled': false,
+		'tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled': true,
+		'tweetypie_unmention_optimization_enabled': true,
+		'verified_phone_label_enabled': false,
+		'view_counts_everywhere_api_enabled': true,
+	}));
+
+	const response = await fetch(url, {
 		headers: {
 			authorization: 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
 			cookie: `ct0=${ct0}`,
@@ -165,19 +193,21 @@ const onClickDown = async function(event) {
 		}
 	});
 
-	const data = await response.json();
+	const details = await response.json();
 
-	const tweets = data.globalObjects.tweets;
-	const tweetMain = tweets[tid];
-	const tweet = tweetMain.quoted_status_id_str ? tweets[tweetMain.quoted_status_id_str] : tweetMain;
+
+	const result = details?.data?.threaded_conversation_with_injections?.
+		instructions?.find(i => i.type == 'TimelineAddEntries')?.
+		entries?.find(i => i.entryId == `tweet-${idTweet}`)?.content?.itemContent?.tweet_results?.result;
+	const tweet = result?.legacy;
+	const user = result?.core?.user_results?.result?.legacy;
+
 
 	const entitiesTweet = tweet.extended_entities || tweet.entities;
-	const mediasTweet = entitiesTweet ? entitiesTweet.media : null;
-
-	const user = data.globalObjects.users[tweet.user_id_str];
-
+	const mediasTweet = entitiesTweet?.media;
 
 	if(!entitiesTweet || !(mediasTweet instanceof Array) || !mediasTweet.length) { return; }
+
 
 	const { progs, textsProg, textsInfo, } = initer(tweet.full_text, mediasTweet.length);
 
@@ -201,11 +231,11 @@ const onClickDown = async function(event) {
 				bitrate: bitrateMax,
 				duration: media.duration_millis,
 				url: variant.url,
-				urlCover: media.media_url,
+				urlCover: media.media_url_https,
 			};
 		}
 		else {
-			const [, id, format] = media.media_url.match(/\/media\/(.*?)\.(.*?)$/) || [];
+			const [, id, format] = media.media_url_https.match(/\/media\/(.*?)\.(.*?)$/) || [];
 
 			return {
 				id: id,
@@ -230,6 +260,16 @@ const onClickDown = async function(event) {
 			setTimeout(() => notyf.dismiss(noty), 14777);
 		}
 	});
+};
+
+const onClickDown = async function(event) {
+	event.stopPropagation();
+
+	const idsTweet = [...new Set([...this.querySelectorAll('a[href*="/status/"]')].map(a => a.href.match(/\/status\/(\d+)/)?.[1]))];
+
+	for(const idTweet of idsTweet) {
+		downloadTweetMedia(idTweet);
+	}
 };
 
 /**
@@ -382,6 +422,6 @@ new MutationObserver(() => {
 			});
 	}
 	catch(error) {
-		console.error(error.message, error.stack);
+		globalThis.console.error(error.message, error.stack);
 	}
 }).observe(document.body, { childList: true, subtree: true });
