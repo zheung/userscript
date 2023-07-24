@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        twitter-media-download
-// @description 2023.07.17 14
+// @description 2023.07.24 08
 // @namespace   https://danor.app/
-// @version     1.5.0
+// @version     1.5.1
 // @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -199,8 +199,8 @@ const downloadTweetMedia = async idTweet => {
 	const result = details?.data?.threaded_conversation_with_injections?.
 		instructions?.find(i => i.type == 'TimelineAddEntries')?.
 		entries?.find(i => i.entryId == `tweet-${idTweet}`)?.content?.itemContent?.tweet_results?.result;
-	const tweet = result?.legacy;
-	const user = result?.core?.user_results?.result?.legacy;
+	const tweet = (result?.tweet ?? result)?.legacy;
+	const user = (result?.tweet ?? result)?.core?.user_results?.result?.legacy;
 
 
 	const entitiesTweet = tweet.extended_entities || tweet.entities;

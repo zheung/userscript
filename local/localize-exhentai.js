@@ -29,6 +29,7 @@ group:合集
 tankoubon:单行本
 original:原创
 artbook:画集
+full censorship:全修正
 uncensored:无修正
 full color:全彩
 mosaic censorship:马赛克修正
@@ -42,7 +43,7 @@ x-ray:透视
 
 # 行为、动作
 
-## 双人行为、体位
+## 多人行为、体位
 pegging:逆肛交
 footjob:足交
 assjob:臀交
@@ -59,6 +60,7 @@ fingering:指交
 tribadism:磨豆腐
 spanking:打屁股
 cbt:下体责罚
+ryona:殴打
 enema:浣肠
 foot licking:舔足
 nipple fuck:乳头交
@@ -118,6 +120,7 @@ netorare:被寝取
 ## 性别关系
 ffm threesome:女女男
 mmt threesome:男男妖
+mmf threesome:男男女
 females only:只有女性
 dickgirls only:只有扶她
 dickgirl on dickgirl:扶她日扶她
@@ -150,6 +153,7 @@ saliva:唾液
 blackmail:威胁信
 leash:锁
 filming:录像中
+sunglasses:太阳眼镜
 
 
 # 角色
@@ -173,7 +177,9 @@ tomgirl:女性化男
 futanari:扶她
 shemale:人妖
 
+facial hair:胡须
 twintails:双马尾
+ponytail:单马尾
 small breasts:贫乳
 big breasts:巨乳
 huge breasts:豪乳
@@ -240,6 +246,7 @@ gothic lolita:哥特萝莉
 slave:奴隶
 witch:女巫
 miko:巫女
+gyaru-oh:辣男
 gyaru:辣妹
 ponygirl:马尾娘
 magical girl:魔法少女
