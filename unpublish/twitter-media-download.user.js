@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        twitter-media-download
-// @description 2023.07.24 08
+// @description 2023.07.30 21
 // @namespace   https://danor.app/
-// @version     1.5.1
+// @version     1.5.2
 // @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -412,7 +412,7 @@ new MutationObserver(() => {
 		[...document.querySelectorAll('article')]
 			.filter(article => article.querySelectorAll('img[src*="pbs.twimg.com/media"], img[src*="pbs.twimg.com/ext_tw_video_thumb"], img[src*="pbs.twimg.com/tweet_video_thumb"], img[src*="pbs.twimg.com/amplify_video_thumb"]').length && !article.querySelectorAll('.nz-tmd-button').length)
 			.forEach(article => {
-				[...article.querySelectorAll('.r-1mdbhws')]
+				[...article.querySelectorAll('.r-1kbdv8c')]
 					.filter(box => !box.querySelector('div.nz-tmd-button'))
 					.forEach(box => initButton(box).addEventListener('click', onClickDown.bind(article)));
 
