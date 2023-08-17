@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name        bilibili-live-highest-quality-stream-select.user
-// @description 2023.08.17.10
+// @name        bilibili-live-highest-quality-stream-select
+// @description 2023.08.17.15
 // @namespace   https://danor.app/
 // @version     1.0.0
 // @author      DanoR
@@ -10,51 +10,63 @@
 
 
 
-; (function() {
-	function process() {
+(async () => {
+	const bestify = () => {
 		try {
-			const livePlayer = document.querySelector('#live-player');
-			livePlayer.dispatchEvent(new Event('mousemove'));
-			const qualityWrap = livePlayer.querySelector('.quality-wrap');
-			const observer = new MutationObserver(mutations => {
+			const domLivePlayer = document.querySelector('#live-player');
+
+			domLivePlayer.dispatchEvent(new Event('mousemove'));
+
+
+			const domQualityWrap = domLivePlayer.querySelector('.quality-wrap');
+
+
+			const observerBestify = new MutationObserver(mutations => {
 				mutations.some(mutation => {
 					try {
-						debugger;
-						const qualities = mutation.target.querySelectorAll('.list-it');
-						if(qualities.length) {
-							qualities[0].click();
-							livePlayer.dispatchEvent(new Event('mouseleave'));
+						const domsQuality = mutation.target.querySelectorAll('.list-it');
+
+						if(domsQuality.length) {
+							domsQuality[0].click();
+
+							domsQuality[0].dispatchEvent(new Event('mouseleave'));
+							domLivePlayer.dispatchEvent(new Event('mouseleave'));
+
 							return true;
 						}
+
 						return false;
-					} catch(e) {
-						console.error(e);
+					} catch(error) {
+						globalThis.console.error(error);
+
 						return false;
 					} finally {
-						observer.disconnect();
+						observerBestify.disconnect();
 					}
 				});
 			});
-			observer.observe(qualityWrap, { childList: true, subtree: true });
-			qualityWrap.dispatchEvent(new Event('mouseenter'));
-		} catch(e) {
-			console.error(e);
-		}
-	}
+			observerBestify.observe(domQualityWrap, { childList: true, subtree: true });
 
-	function live() {
-		const observer = new MutationObserver(mutations => {
-			mutations.forEach(mutation => {
-				mutation.addedNodes.forEach(node => {
-					if(node.nodeName === 'VIDEO') {
-						window.setTimeout(process, 600);
-						observer.disconnect();
-					}
-				});
+			domQualityWrap.dispatchEvent(new Event('mouseenter'));
+		}
+		catch(error) {
+			globalThis.console.error(error);
+		}
+	};
+
+
+
+	const observer = new MutationObserver(mutations => {
+		mutations.forEach(mutation => {
+			mutation.addedNodes.forEach(node => {
+				if(node.nodeName == 'VIDEO') {
+					window.setTimeout(bestify, 1000 * 0.7);
+
+					observer.disconnect();
+				}
 			});
 		});
-		observer.observe(document, { childList: true, subtree: true });
-	}
+	});
 
-	live();
+	observer.observe(document.body, { childList: true, subtree: true });
 })();
