@@ -11,23 +11,25 @@
 
 
 
-if(/name=/.test(location.href) && !/name=orig/.test(location.href)) {
-	let href = location.href.replace(/name=\w+/, 'name=orig');
+(async () => {
+	if(/name=/.test(location.href) && !/name=orig/.test(location.href)) {
+		let href = location.href.replace(/name=\w+/, 'name=orig');
 
-	if(/format=webp/.test(location.href)) {
-		for(const format of ['webp', 'png', 'jpg', 'bmp', 'gif']) {
-			const {status} = await fetch(
-				href.replace(/format=\w+/, `format=${format}`),
-				{ method: 'HEAD' },
-			);
+		if(/format=webp/.test(location.href)) {
+			for(const format of ['webp', 'png', 'jpg', 'bmp', 'gif']) {
+				const { status } = await fetch(
+					href.replace(/format=\w+/, `format=${format}`),
+					{ method: 'HEAD' },
+				);
 
-			if(status == 200) {
-				href = href.replace(/format=\w+/, `format=${format}`);
+				if(status == 200) {
+					href = href.replace(/format=\w+/, `format=${format}`);
 
-				break;
+					break;
+				}
 			}
 		}
-	}
 
-	location.href = href;
-}
+		location.href = href;
+	}
+})();
