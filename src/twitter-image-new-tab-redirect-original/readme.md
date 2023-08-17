@@ -1,6 +1,6 @@
 twitter-image-new-tab-redirect-original
 ==============
-### WARNING! This user script will **`only run`** on the latest **`modern browsers`**<!--  that support **`top-level-await`** -->!  
+### WARNING! This user script will **`only run`** on the latest **`modern browsers`**!  
   
 - I'm very tired and anxious about "adding a lot of extraneous code and avoiding the latest features in order to write compatible code".  
 So I will not actively writing code that's compatible with older browser engines.  
