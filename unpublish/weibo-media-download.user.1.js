@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name      Weibo 2020 Media Download
 // @namespace https://danor.app/
-// @version   1.4.2-2021.12.28.01
+// @version   1.4.1-2021.11.29.01
 // @author    Nuogz
 // @grant     GM_getResourceText
 // @grant     GM_addStyle
@@ -78,7 +78,6 @@ GM_addStyle(`
 		cursor: pointer;
 		font-size: 11px;
 		padding: 1px;
-		z-index: 9999;
 	}
 	.nz-wmd-button._search {
 		top: 19px;
@@ -277,7 +276,7 @@ const downloadPicture = async () => {
 	const weibo = await (await fetch(`https://weibo.com/ajax/statuses/show?id=${idWeibo}`)).json();
 	const imagesRaw = Object.values(weibo?.pic_infos ?? {});
 
-	const index = [...imageWeiboNow.parentNode.childNodes].indexOf(imageWeiboNow) + 1;
+	const index = [...imageWeiboNow.parentNode.children].indexOf(imageWeiboNow) + 1;
 
 	const media = imagesRaw[index - 1];
 	const medias = [];
@@ -289,19 +288,10 @@ const downloadPicture = async () => {
 	});
 
 	if(media.video) {
-		let nameFile;
-		try {
-			nameFile = parseURLName(new URL(new URL(media.video).searchParams.get('livephoto')).pathname);
-		}
-		catch(error) {
-			nameFile = parseURLName(new URL(media.video).pathname);
-		}
-
-
 		medias.push({
 			show: `L${index}`,
 			url: media.video,
-			nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${nameFile}`,
+			nameFile: `Weibo@${idUser}@${idWeibo}@${index}@${parseURLName(new URL(new URL(media.video).searchParams.get('livephoto')).pathname)}`,
 		});
 	}
 
@@ -358,7 +348,7 @@ const initElImage = itemPicture => {
 };
 
 const initElToolbar = toolbar => {
-	const itemIcon = toolbar.childNodes[0].cloneNode(true);
+	const itemIcon = toolbar.children[0].cloneNode(true);
 
 	QS('[class*=toolbar_num_]', itemIcon).innerHTML = '';
 

@@ -350,7 +350,7 @@ const downloadData = async (info, box, isSaveImmediate = false) => {
 const download = async idDynamic => {
 	G.log('download-start', '...');
 
-	const dynamic = await (await fetch(`https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=${idDynamic}`)).json();
+	const dynamic = await (await fetch(`https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=${idDynamic}`, { credentials: 'include' })).json();
 
 	const urls = dynamic?.data?.item?.modules?.module_dynamic?.major?.draw?.items.map(item => item.src);
 	const author = dynamic?.data?.item?.modules?.module_author;
