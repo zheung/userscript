@@ -19,8 +19,8 @@
 
 // @resource    parseData ./youtube-media-download/parse-data.js
 
-// @resource    indexHTML ./youtube-media-download/index.user.html
-// @resource    indexCSS ./youtube-media-download/index.user.css
+// @resource    indexHTML ./youtube-media-download/index.html
+// @resource    indexCSS ./youtube-media-download/index.css
 // ==/UserScript==
 
 
