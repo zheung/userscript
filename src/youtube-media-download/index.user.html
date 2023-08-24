@@ -1,0 +1,28 @@
+<div show-button>&gt;</div>
+<dialog main-box>
+	<div title>Youtube 媒体下载</div>
+
+	<div sub-title>● 格式</div>
+	<div formats-box>
+		<div formats>
+			<div title>视频源</div>
+			<select video size="24">
+				<optgroup adaptive-videos label="自适应 ---------------------"></optgroup>
+				<optgroup fixed-videos label="固定 ---------------------"></optgroup>
+			</select>
+		</div>
+		<div formats>
+			<div title>音频源</div>
+			<select audio size="24">
+				<optgroup adaptive-audios label="自适应 ---------------------"></optgroup>
+			</select>
+		</div>
+	</div>
+
+	<download-button oper style="float: right;">下载媒体</download-button>
+	<select oper save-mode style="float: right;" value="auto-detect">
+		<option value="auto-detect">自动判断</option>
+		<option value="disk-direct">直接保存</option>
+	</select>
+	<div style="clear:both"></div>
+</dialog>

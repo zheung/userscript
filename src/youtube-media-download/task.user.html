@@ -1,22 +1,23 @@
 <div show-button>&gt;</div>
 <dialog>
 	<div title>Youtube Media Download</div>
+
 	<div formats>
-		<span>fixed video：</span>
-		<select fixed-videos></select>
-		<download-button fixed-video>Download</download-button>
-	</div>
-	<div formats>
-		<span>adaptive video：</span>
+		<span>adaptive video</span>
 		<select adaptive-videos></select>
 		<download-button adaptive-video>Download</download-button>
 	</div>
 	<div formats>
-		<span>adaptive audio：</span>
+		<span>adaptive audio</span>
 		<select adaptive-audios></select>
 		<download-button adaptive-audio>Download</download-button>
 	</div>
-	<download-button adaptive-mixed style="float: right;">Download and Mix adaptive media</download-button>
+	<div formats>
+		<span>fixed video</span>
+		<select fixed-videos></select>
+		<download-button fixed-video>Download</download-button>
+	</div>
+	<download-button adaptive-mixed style="float: right;">Download adaptive media</download-button>
 	<div style="clear:both"></div>
 	<div sub-title>● Task</div>
 	<div tasks></div>
