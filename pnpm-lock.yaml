@@ -6,14 +6,17 @@ settings:
 
 devDependencies:
   '@types/tampermonkey':
-    specifier: ^4.0.11
-    version: 4.0.11
+    specifier: ^4.20.1
+    version: 4.20.1
   '@types/wicg-file-system-access':
     specifier: ^2020.9.6
     version: 2020.9.6
   eslint:
     specifier: ^8.47.0
     version: 8.47.0
+  p-map:
+    specifier: ^6.0.0
+    version: 6.0.0
 
 packages:
 
@@ -32,8 +35,8 @@ packages:
       eslint-visitor-keys: 3.4.3
     dev: true
 
-  /@eslint-community/regexpp@4.6.2:
-    resolution: {integrity: sha512-pPTNuaAG3QMH+buKyBIGJs3g/S5y0caxw0ygM3YyE6yJFySwiGGSzA+mM3KJ8QQvzeLh3blwgSonkFjgQdxzMw==}
+  /@eslint-community/regexpp@4.7.0:
+    resolution: {integrity: sha512-+HencqxU7CFJnQb7IKtuNBqS6Yx3Tz4kOL8BJXo+JyeiBm5MEX6pO8onXDkjrkCRlfYXS1Axro15ZjVFe9YgsA==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
     dev: true
 
@@ -100,8 +103,8 @@ packages:
       fastq: 1.15.0
     dev: true
 
-  /@types/tampermonkey@4.0.11:
-    resolution: {integrity: sha512-XqMggdw4oKGg8XAtT+m9Z3AykbUebqpX+1r6FhD9ClkF2YrqfRA55dJ2mWw3wyrdHWfhxGFsN5ZnL2HIM01AMw==}
+  /@types/tampermonkey@4.20.1:
+    resolution: {integrity: sha512-PcthG6KpxjElJLthR+x2N2KVaKU6bKDUHg6UVQ+ZEVbr4PqC8bSu+ryfm/YhqIT5Op4lyY4WjWePp77EkrMO6A==}
     dev: true
 
   /@types/wicg-file-system-access@2020.9.6:
@@ -242,7 +245,7 @@ packages:
     hasBin: true
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.47.0)
-      '@eslint-community/regexpp': 4.6.2
+      '@eslint-community/regexpp': 4.7.0
       '@eslint/eslintrc': 2.1.2
       '@eslint/js': 8.47.0
       '@humanwhocodes/config-array': 0.11.10
@@ -526,6 +529,11 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       p-limit: 3.1.0
+    dev: true
+
+  /p-map@6.0.0:
+    resolution: {integrity: sha512-T8BatKGY+k5rU+Q/GTYgrEf2r4xRMevAN5mtXc2aPc4rS1j3s+vWTaO2Wag94neXuCAUAs8cxBL9EeB5EA6diw==}
+    engines: {node: '>=16'}
     dev: true
 
   /parent-module@1.0.1:

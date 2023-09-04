@@ -11,8 +11,9 @@
 	"type": "module",
 	"private": true,
 	"devDependencies": {
-		"@types/tampermonkey": "^4.0.11",
+		"@types/tampermonkey": "^4.20.1",
 		"@types/wicg-file-system-access": "^2020.9.6",
-		"eslint": "^8.47.0"
+		"eslint": "^8.47.0",
+		"p-map": "^6.0.0"
 	}
 }
