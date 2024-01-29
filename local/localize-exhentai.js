@@ -143,6 +143,7 @@ machine:机械
 gag:口球
 tentacles:触手
 makeup:化妆品
+pillory:颈手枷
 
 ## 人体产物
 smegma:包皮垢
@@ -197,7 +198,8 @@ onahole:人工阴道
 unusual pupils:奇怪的瞳孔
 beauty mark:美人痣
 hairy:阴毛
-big penis:巨根
+big penis:大阴茎
+small penis:小阴茎
 multiple penises:复数阴茎
 
 hair buns:丸子头
