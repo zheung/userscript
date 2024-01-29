@@ -2,3 +2,7 @@
 
 /test/local
 /test/*.local.js
+
+/dist
+
+/config

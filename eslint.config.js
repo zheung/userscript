@@ -21,13 +21,13 @@ const rulesBase = {
 const configs = [
 	{ ignores: ['dist/**/*.js'] },
 	{
-		files: ['eslint.config.js'],
+		files: ['rollup-script.env.js', 'rollup-script.js', 'eslint.config.js'],
 		languageOptions: { globals: globals.node },
 		rules: rulesBase,
 	},
 	{
 		files: ['**/*.js'],
-		ignores: ['eslint.config.js'],
+		ignores: ['rollup-script.env.js', 'rollup-script.js', 'eslint.config.js'],
 		languageOptions: {
 			globals: {
 				...globals.browser,
