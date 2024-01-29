@@ -2,12 +2,12 @@
 // @name        saucenao-improve
 // @description 2023.09.04.15
 // @namespace   https://danor.app/
-// @version     1.0.0
+// @version     1.0.1
 // @author      DanoR
 // @grant       GM_addStyle
 // @grant       unsafeWindow
 // @run-at      document-end
-// @match       *://saucenao.com/search.php
+// @match       *://saucenao.com/search.php*
 // ==/UserScript==
 
 
