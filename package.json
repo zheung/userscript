@@ -11,12 +11,12 @@
 	"type": "module",
 	"private": true,
 	"devDependencies": {
-		"@nuogz/pangu": "^4.2.0",
-		"@types/node": "^20.11.10",
+		"@nuogz/pangu": "^4.3.1",
+		"@types/node": "^20.11.19",
 		"@types/tampermonkey": "^5.0.2",
 		"@types/wicg-file-system-access": "^2023.10.4",
 		"eslint": "^8.56.0",
 		"p-map": "^6.0.0",
-		"rollup": "^4.9.6"
+		"rollup": "^4.12.0"
 	}
 }
