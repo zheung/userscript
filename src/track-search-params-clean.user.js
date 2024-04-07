@@ -43,3 +43,4 @@ const createCleaner = keys => {
 
 
 if(location.hostname.includes('bilibili.com')) { createCleaner(['vd_source', 'spm_id_from']); }
+if(location.hostname.includes('live.bilibili.com')) { createCleaner(['broadcast_type', 'live_from', 'visit_id']); }

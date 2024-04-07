@@ -1,4 +1,4 @@
-export default class Logger {
+export class Logger {
 	/** @type {string} */
 	namePackage;
 
@@ -13,3 +13,6 @@ export default class Logger {
 	error(...params) { globalThis.console.error(`${this.namePackage}:`, ...params); }
 	warn(...params) { globalThis.console.warn(`${this.namePackage}:`, ...params); }
 }
+
+
+export const G = new Logger(GM_info.script.name);

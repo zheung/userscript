@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        twitter-media-download
-// @description 2023.07.30 21
+// @description 2024.03.12.16
 // @namespace   https://danor.app/
-// @version     1.5.2
+// @version     1.5.3
 // @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -112,7 +112,7 @@ const openDBox = (id) => {
 
 
 const downloadMedia = async (media, tweet, user, prog, textProg) => {
-	const response = await fetch(new Request(media.url, { cache: 'reload' }));
+	const response = await fetch(new Request(media.url, { cache: 'reload', credentials: 'same-origin' }));
 	const reader = response.body.getReader();
 
 	const sizeTotal = +response.headers.get('Content-Length');

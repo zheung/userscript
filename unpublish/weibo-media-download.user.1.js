@@ -242,7 +242,7 @@ const downloadPictures = async toolbar => {
 		}
 	});
 
-	videosRaw.sort((a, b) => a?.meta?.quality_index > b?.meta?.quality_index);
+	videosRaw.sort((a, b) => a?.meta?.quality_index - b?.meta?.quality_index);
 	const urlVideo = videosRaw[0]?.play_info?.url;
 	if(urlVideo) {
 		medias.push({
