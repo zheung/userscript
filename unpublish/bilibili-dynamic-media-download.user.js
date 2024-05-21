@@ -2,7 +2,7 @@
 // @name        bilibili-dynamic-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.1.1-2023.03.24.02
+// @version     1.1.2-2024.05.14.09
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -22,8 +22,8 @@ const namePackage = GM_info.script.name;
 
 
 const G = {
-	log(...params) { console.log(`${namePackage}: `, ...params); },
-	error(...params) { console.error(`${namePackage}: `, ...params); },
+	log(...params) { globalThis.console.log(`${namePackage}: `, ...params); },
+	error(...params) { globalThis.console.error(`${namePackage}: `, ...params); },
 };
 
 
@@ -318,9 +318,16 @@ const downloadData = async (info, box, isSaveImmediate = false) => {
 		});
 
 
-		initSaver(saver, '保存', info.nameSave, URL.createObjectURL(new Blob([datasMedia])));
+		const urlObjectMedia = URL.createObjectURL(new Blob([datasMedia]));
+		initSaver(saver, '保存', info.nameSave, urlObjectMedia);
 
-		if(isSaveImmediate) { saver.click(); }
+		// if(isSaveImmediate) { saver.click(); }
+		if(isSaveImmediate) {
+			const a = document.createElement('a');
+			a.download = info.nameSave;
+			a.href = urlObjectMedia;
+			a.click();
+		}
 
 
 		G.log('download-media', '✔', info.nameLog);

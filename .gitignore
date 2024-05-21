@@ -8,3 +8,6 @@
 /config
 
 /else
+/dev-vue
+
+/src/@test.user.js

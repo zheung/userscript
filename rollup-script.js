@@ -7,10 +7,12 @@ import { rollup } from 'rollup';
 import pluginSCSS from 'rollup-plugin-scss';
 import { string as pluginString } from 'rollup-plugin-string';
 import { nodeResolve as pluginNodeResolve } from '@rollup/plugin-node-resolve';
+import pluginReplace from '@rollup/plugin-replace';
 import pluginCommonjs from '@rollup/plugin-commonjs';
 
 import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
+import postcssPrefixSelector from 'postcss-prefix-selector';
 import tailwindcss from 'tailwindcss';
 import plugin$Tailwind from 'tailwindcss/plugin.js';
 
@@ -93,6 +95,11 @@ const bundle = await rollup({
 						}),
 					],
 				}),
+				postcssPrefixSelector({
+					prefix: `danor-${infoInput.name.replace('.user', '')}`,
+					transform: (prefix, selector, prefixedSelector) =>
+						['html', 'body'].includes(selector) ? prefix : prefixedSelector
+				}),
 				autoprefixer({}),
 			]),
 		}),
@@ -101,6 +108,10 @@ const bundle = await rollup({
 		}),
 		pluginNodeResolve(),
 		pluginCommonjs(),
+		pluginReplace({
+			'preventAssignment': true,
+			'process.env.NODE_ENV': JSON.stringify('production'),
+		})
 	]
 });
 
