@@ -2,7 +2,7 @@
 // @name        bilibili-dynamic-media-download
 // @description as the title
 // @namespace   https://danor.app/
-// @version     1.1.2-2024.05.14.09
+// @version     1.1.3-2024.07.27.12
 // @author      Nuogz
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
@@ -365,6 +365,7 @@ const download = async idDynamic => {
 	const boxes = openNoty(`下载 ${author.name}@${idDynamic}`).initer(urls.length);
 
 	urls.map(async (url, index) => {
+		url = url.replace('http','https');
 		const II = {
 			url: url,
 			nameLog: `第${index + 1}张`,
@@ -394,7 +395,7 @@ GM_addStyle(`
 const initDownloadButton = elTime => {
 	elTime.setAttribute(namePackage, '');
 
-	if(!document.querySelector('.bili-album')) { return; }
+	if(!document.querySelector('.bili-album, .opus-module-top__album')) { return; }
 
 	let idDynamic = location.pathname.split('/').pop();
 
@@ -402,7 +403,7 @@ const initDownloadButton = elTime => {
 	if(!~~idDynamic) {
 		const elMain = elTime.parentElement.parentElement.parentElement;
 
-		const elAlbum = elMain.querySelector('.bili-album');
+		const elAlbum = elMain.querySelector('.bili-album, .opus-module-top__album');
 		idDynamic = elAlbum?.attributes['dyn-id']?.value;
 
 		if(!~~idDynamic) { return; }
