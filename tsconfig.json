@@ -1,0 +1,25 @@
+{
+	"compilerOptions": {
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"target": "esnext",
+		"experimentalDecorators": true,
+		"strict": true,
+		"allowJs": true,
+		"jsx": "preserve",
+		"declaration": true,
+		"declarationDir": "./types",
+		"emitDeclarationOnly": true
+	},
+	"include": [
+		"**/*.js",
+		"**/*.vue"
+	],
+	"exclude": [
+		"eslint.config.js",
+		"node_modules",
+		"test",
+		"dist",
+		"dev-vue"
+	]
+}

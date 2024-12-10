@@ -1,36 +1,45 @@
 {
 	"name": "@danor/userscript",
-	"version": "1.3.1",
-	"description": "DanoR's userscript",
+	"version": "1.4.0",
+	"description": "",
 	"author": "DanoR",
 	"license": "LGPL-3.0-or-later",
 	"repository": {
 		"type": "git",
-		"url": "github:zheung/userscript"
+		"url": "git+https://github.com/zheung/userscript.git"
 	},
-	"type": "module",
 	"private": true,
+	"type": "module",
+	"typesSource": [
+		"browser"
+	],
+	"engines": {
+		"node": ">=20"
+	},
 	"devDependencies": {
-		"@fortawesome/fontawesome-svg-core": "^6.5.2",
-		"@fortawesome/free-solid-svg-icons": "^6.5.2",
-		"@fortawesome/vue-fontawesome": "^3.0.6",
-		"@nuogz/pangu": "^5.1.4",
-		"@rollup/plugin-commonjs": "^25.0.7",
-		"@rollup/plugin-node-resolve": "^15.2.3",
-		"@rollup/plugin-replace": "^5.0.5",
-		"@types/node": "^20.12.12",
-		"@types/tampermonkey": "^5.0.3",
+		"@eslint/js": "^9.16.0",
+		"@fortawesome/fontawesome-svg-core": "^6.7.1",
+		"@fortawesome/free-solid-svg-icons": "^6.7.1",
+		"@fortawesome/vue-fontawesome": "^3.0.8",
+		"@nuogz/pangu": "^5.5.0",
+		"@rollup/plugin-commonjs": "^25.0.8",
+		"@rollup/plugin-node-resolve": "^15.3.0",
+		"@rollup/plugin-replace": "^5.0.7",
+		"@stylistic/eslint-plugin-js": "^2.12.0",
+		"@types/node": "^20.17.9",
+		"@types/tampermonkey": "^5.0.4",
 		"@types/wicg-file-system-access": "^2023.10.5",
-		"autoprefixer": "^10.4.19",
-		"eslint": "^8.57.0",
+		"autoprefixer": "^10.4.20",
+		"eslint": "^9.16.0",
+		"globals": "^15.13.0",
 		"p-map": "^6.0.0",
-		"postcss": "^8.4.38",
+		"postcss": "^8.4.49",
 		"postcss-prefix-selector": "^1.16.1",
-		"rollup": "^4.17.2",
+		"rollup": "^4.28.1",
 		"rollup-plugin-scss": "^4.0.0",
 		"rollup-plugin-string": "^3.0.0",
-		"sass": "^1.77.2",
-		"tailwindcss": "^3.4.3",
-		"vue": "^3.4.27"
+		"sass": "^1.82.0",
+		"tailwindcss": "^3.4.16",
+		"vue": "^3.5.13"
 	}
 }

@@ -1,10 +1,11 @@
-const plugin = require('tailwindcss/plugin');
+import plugin from 'tailwindcss/plugin.js';
 
 
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-	content: ['./src/**/*.sass'],
+export default {
+	content: ['./src/index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+	darkMode: ['selector', '[color-scheme="dark"]'],
 	theme: {
 		extend: {
 			boxShadow: {

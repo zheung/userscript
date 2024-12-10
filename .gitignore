@@ -1,13 +1,7 @@
 /node_modules
-
 /test/local
-/test/*.local.js
-
+/test/*.local.*
 /dist
-
 /config
-
-/else
 /dev-vue
-
 /src/@test.user.js
