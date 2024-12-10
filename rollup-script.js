@@ -1,6 +1,7 @@
 import { C } from '@nuogz/pangu/index.js?config=_';
 
 import { spawnSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
 import { parse, resolve } from 'path';
 
 import { rollup } from 'rollup';
@@ -119,5 +120,8 @@ const output = await bundle.write({ file: pathOutput, format: 'esm', generatedCo
 
 
 if(output.output.length) {
+	// 出现因上一段代码不规范，导致两段代码连在一起的情况，故追加换行符到文件头中
+	writeFileSync(pathOutput, '\n' + readFileSync(pathOutput, 'utf-8'));
+
 	spawnSync(C.pathChrome, [pathOutput]);
 }
