@@ -11,7 +11,8 @@
 	"private": true,
 	"type": "module",
 	"typesSource": [
-		"browser"
+		"browser",
+		"userscript"
 	],
 	"engines": {
 		"node": ">=20"
