@@ -1,48 +1,47 @@
 // ==UserScript==
 // @name        bilibili-watchlater-open-video-page
-// @description as the title
+// @description 2025.01.23.23
 // @namespace   https://danor.app/
-// @version     1.0.0-2023.01.17.01
-// @author      Nuogz
+// @version     1.1.0
+// @author      DanoR
 // @grant       none
-// @grant       GM_addStyle
 // @match       *://www.bilibili.com/watchlater/*
 // ==/UserScript==
+
+import { querySelectorAll } from './lib/util.js';
+import { G } from './lib/logger.js';
 
 
 
 const namePackage = GM_info.script.name;
 
 
-const G = {
-	log(...params) { console.log(`${namePackage}: `, ...params); },
-	error(...params) { console.error(`${namePackage}: `, ...params); },
-};
 
 
 const observer = new MutationObserver(() => {
 	try {
-		[...document.querySelectorAll('.av-about>a.t:not(.t-d)')]
-			.filter(link => link.nextElementSibling.tagName == 'DIV' && !link.hasAttribute(namePackage))
-			.forEach(link => {
-				const linkRaw = link.cloneNode(true);
-				linkRaw.setAttribute(namePackage, '');
-				linkRaw.innerHTML = '[打开视频页]';
-				linkRaw.target = '_blank';
-				linkRaw.style.fontSize = '12px';
-				linkRaw.style.color = 'gray';
-				linkRaw.style.fontWeight = 'normal';
+		const links = [...querySelectorAll('div.video-card>div.video-card__right>a')]
+			.filter(link => !link.hasAttribute(namePackage));
+
+		for(const link of links) {
+			const urlWatchlater = new URL(link.href);
+			const bv = urlWatchlater.searchParams.get('bvid');
 
 
-				const url = new URL(linkRaw.href);
-				const bv = url.pathname.split('/').pop();
+			const linkVideo = document.createElement('a');
 
-				url.pathname = `video/${bv}`;
-				linkRaw.href = url.toString();
+			linkVideo.setAttribute(namePackage, '');
+			linkVideo.innerHTML = '打开视频页';
+			linkVideo.target = '_blank';
+			linkVideo.style.fontSize = '14px';
+			linkVideo.style.color = 'var(--text3)';
+
+			linkVideo.href = `https://www.bilibili.com/video/${bv}`;
 
 
-				link.parentNode.insertBefore(linkRaw, link.nextElementSibling);
-			});
+			link.setAttribute(namePackage, '');
+			link.parentNode.appendChild(linkVideo);
+		}
 	}
 	catch(error) { G.error('✖', error.message, error.stack); }
 });
