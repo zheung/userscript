@@ -1,6 +1,5 @@
-export default {
-	plugins: {
-		tailwindcss: {},
-		autoprefixer: {},
-	},
-};
+import pluginUnoPostCSS from '@unocss/postcss';
+
+
+
+export default { plugins: [pluginUnoPostCSS()] };
