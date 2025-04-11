@@ -1,6 +1,6 @@
 {
 	"name": "@danor/userscript",
-	"version": "1.5.0",
+	"version": "1.5.1",
 	"description": "",
 	"author": "DanoR",
 	"license": "LGPL-3.0-or-later",
@@ -18,7 +18,7 @@
 		"node": ">=20"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.22.0",
+		"@eslint/js": "^9.24.0",
 		"@fortawesome/fontawesome-svg-core": "^6.7.2",
 		"@fortawesome/free-solid-svg-icons": "^6.7.2",
 		"@fortawesome/vue-fontawesome": "^3.0.8",
@@ -27,19 +27,19 @@
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@rollup/plugin-replace": "^6.0.2",
 		"@stylistic/eslint-plugin-js": "^4.2.0",
-		"@types/node": "^20.17.24",
+		"@types/node": "^22.14.0",
 		"@types/tampermonkey": "^5.0.4",
-		"@types/wicg-file-system-access": "^2023.10.5",
+		"@types/wicg-file-system-access": "^2023.10.6",
 		"@unocss/postcss": "66.1.0-beta.5",
-		"eslint": "^9.22.0",
+		"eslint": "^9.24.0",
 		"globals": "^16.0.0",
 		"p-map": "^7.0.3",
 		"postcss": "^8.5.3",
-		"postcss-prefix-selector": "^2.1.0",
-		"rollup": "^4.36.0",
+		"postcss-prefix-selector": "^2.1.1",
+		"rollup": "^4.39.0",
 		"rollup-plugin-sass": "^1.15.2",
 		"rollup-plugin-string": "^3.0.0",
-		"sass": "^1.86.0",
+		"sass": "^1.86.3",
 		"unocss": "66.1.0-beta.5",
 		"vue": "^3.5.13"
 	}

@@ -108,6 +108,7 @@ farting:放屁
 crying:哭泣
 coprophagia:食粪
 piss drinking:喝尿
+multiple orgasms:连续高潮
 
 # 关系
 femdom:女主调教
@@ -125,6 +126,7 @@ females only:只有女性
 dickgirls only:只有扶她
 dickgirl on dickgirl:扶她日扶她
 dickgirl on male:扶她日男生
+dickgirl on female:扶她日女生
 male on dickgirl:男生日扶她
 sole dickgirl:只有扶她
 sole dickgirl:只有人妖
@@ -144,6 +146,7 @@ gag:口球
 tentacles:触手
 makeup:化妆品
 pillory:颈手枷
+wooden horse:木马
 
 ## 人体产物
 smegma:包皮垢
@@ -201,8 +204,9 @@ hairy:阴毛
 big penis:大阴茎
 small penis:小阴茎
 multiple penises:复数阴茎
-
+eye-covering bang:遮眼刘海
 hair buns:丸子头
+anorexic:皮包骨
 
 ## 着装
 masked face:蒙面
@@ -219,6 +223,7 @@ school swimsuit:学校泳衣
 swimsuit:泳衣
 hotpants:热裤
 bikini:比基尼
+bride:婚纱
 glasses:眼镜
 collar:颈圈
 harness:拘束带
