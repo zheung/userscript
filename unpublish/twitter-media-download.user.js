@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name        twitter-media-download
-// @description 2024.03.12.16
+// @description 2025.05.23.16
 // @namespace   https://danor.app/
-// @version     1.5.3
+// @version     1.6.0
 // @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
 // @require     https://unpkg.com/notyf@3/notyf.min.js
 // @resource    notyf_css https://unpkg.com/notyf@3/notyf.min.css
 // @match       *://twitter.com/*
+// @match       *://x.com/*
 // ==/UserScript==
 
 /* global Notyf */
@@ -95,16 +96,24 @@ const openDBox = (id) => {
 	const boxTitle = dbox.querySelector('.title');
 	const boxDown = dbox.querySelector('.down');
 
+	boxTitle.addEventListener('click', () => notyf.dismiss(noty));
+
 	const initer = (text, count) => {
 		dbox.title = text;
-		boxTitle.innerHTML = boxTitle.innerHTML.replace(' Fetching...', '');
-		boxDown.innerHTML = domTextDBox.repeat(count);
 
-		const progs = dbox.querySelectorAll('progress');
-		const textsProg = dbox.querySelectorAll('.prog');
-		const textsInfo = dbox.querySelectorAll('.info');
 
-		return { progs, textsProg, textsInfo, };
+		boxTitle.innerHTML = boxTitle.innerHTML.replace(' Fetching...', ` Fetched: ${count}`);
+
+
+		if(count) {
+			boxDown.innerHTML = domTextDBox.repeat(count);
+
+			const progs = dbox.querySelectorAll('progress');
+			const textsProg = dbox.querySelectorAll('.prog');
+			const textsInfo = dbox.querySelectorAll('.info');
+
+			return { progs, textsProg, textsInfo };
+		}
 	};
 
 	return { noty, initer };
@@ -150,39 +159,62 @@ const downloadMedia = async (media, tweet, user, prog, textProg) => {
 };
 
 
-const downloadTweetMedia = async idTweet => {
+const downloadTweetMedia = async (idTweet, idsTweet) => {
 	const ct0 = (document.cookie.match(/ct0=(.*?); /) || [])[1];
 
 	const { noty, initer } = openDBox(idTweet);
 
-	const url = new URL('https://twitter.com/i/api/graphql/-Ls3CrSQNo2fRKH6i6Na1A/TweetDetail');
+	const url = new URL('https://x.com/i/api/graphql/u5Tij6ERlSH2LZvCUqallw/TweetDetail');
 	url.searchParams.set('variables', JSON.stringify({
 		'focalTweetId': idTweet,
+		'referrer': 'profile',
+		'controller_data': 'DAACDAABDAABCgABAAAAAAAAAAAKAAkMhTkrn1QQAAAAAAA=',
+		'with_rux_injections': false,
+		'rankingMode': 'Relevance',
 		'includePromotedContent': true,
+		'withCommunity': true,
+		'withQuickPromoteEligibilityTweetFields': true,
 		'withBirdwatchNotes': true,
 		'withVoice': true
 	}));
 	url.searchParams.set('features', JSON.stringify({
-		'creator_subscriptions_tweet_preview_api_enabled': true,
-		'freedom_of_speech_not_reach_fetch_enabled': true,
-		'graphql_is_translatable_rweb_tweet_is_translatable_enabled': true,
-		'longform_notetweets_consumption_enabled': true,
-		'longform_notetweets_inline_media_enabled': true,
-		'longform_notetweets_rich_text_read_enabled': true,
-		'responsive_web_edit_tweet_api_enabled': true,
-		'responsive_web_enhance_cards_enabled': false,
-		'responsive_web_graphql_exclude_directive_enabled': true,
-		'responsive_web_graphql_skip_user_profile_image_extensions_enabled': false,
-		'responsive_web_graphql_timeline_navigation_enabled': true,
-		'responsive_web_media_download_video_enabled': false,
-		'responsive_web_twitter_article_tweet_consumption_enabled': false,
-		'rweb_lists_timeline_redesign_enabled': true,
-		'standardized_nudges_misinfo': true,
-		'tweet_awards_web_tipping_enabled': false,
-		'tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled': true,
-		'tweetypie_unmention_optimization_enabled': true,
+		'rweb_video_screen_enabled': false,
+		'profile_label_improvements_pcf_label_in_post_enabled': true,
+		'rweb_tipjar_consumption_enabled': true,
 		'verified_phone_label_enabled': false,
+		'creator_subscriptions_tweet_preview_api_enabled': true,
+		'responsive_web_graphql_timeline_navigation_enabled': true,
+		'responsive_web_graphql_skip_user_profile_image_extensions_enabled': false,
+		'premium_content_api_read_enabled': false,
+		'communities_web_enable_tweet_community_results_fetch': true,
+		'c9s_tweet_anatomy_moderator_badge_enabled': true,
+		'responsive_web_grok_analyze_button_fetch_trends_enabled': false,
+		'responsive_web_grok_analyze_post_followups_enabled': true,
+		'responsive_web_jetfuel_frame': false,
+		'responsive_web_grok_share_attachment_enabled': true,
+		'articles_preview_enabled': true,
+		'responsive_web_edit_tweet_api_enabled': true,
+		'graphql_is_translatable_rweb_tweet_is_translatable_enabled': true,
 		'view_counts_everywhere_api_enabled': true,
+		'longform_notetweets_consumption_enabled': true,
+		'responsive_web_twitter_article_tweet_consumption_enabled': true,
+		'tweet_awards_web_tipping_enabled': false,
+		'responsive_web_grok_show_grok_translated_post': false,
+		'responsive_web_grok_analysis_button_from_backend': false,
+		'creator_subscriptions_quote_tweet_preview_enabled': false,
+		'freedom_of_speech_not_reach_fetch_enabled': true,
+		'standardized_nudges_misinfo': true,
+		'tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled': true,
+		'longform_notetweets_rich_text_read_enabled': true,
+		'longform_notetweets_inline_media_enabled': true,
+		'responsive_web_grok_image_annotation_enabled': true,
+		'responsive_web_enhance_cards_enabled': false
+	}));
+	url.searchParams.set('fieldToggles', JSON.stringify({
+		'withArticleRichContentState': true,
+		'withArticlePlainText': false,
+		'withGrokAnalyze': false,
+		'withDisallowedReplyControls': false
 	}));
 
 	const response = await fetch(url, {
@@ -196,20 +228,24 @@ const downloadTweetMedia = async idTweet => {
 	const details = await response.json();
 
 
-	const result = details?.data?.threaded_conversation_with_injections?.
+	const result = details?.data?.threaded_conversation_with_injections_v2?.
 		instructions?.find(i => i.type == 'TimelineAddEntries')?.
 		entries?.find(i => i.entryId == `tweet-${idTweet}`)?.content?.itemContent?.tweet_results?.result;
 	const tweet = (result?.tweet ?? result)?.legacy;
-	const user = (result?.tweet ?? result)?.core?.user_results?.result?.legacy;
+	const user = (result?.tweet ?? result)?.core?.user_results?.result?.core;
 
+
+	if(tweet.quoted_status_id_str && !idsTweet.includes(tweet.quoted_status_id_str)) {
+		setTimeout(() => downloadTweetMedia(tweet.quoted_status_id_str, idsTweet), 0);
+	}
 
 	const entitiesTweet = tweet.extended_entities || tweet.entities;
 	const mediasTweet = entitiesTweet?.media;
 
-	if(!entitiesTweet || !(mediasTweet instanceof Array) || !mediasTweet.length) { return; }
+	if(!entitiesTweet || !(mediasTweet instanceof Array) || !mediasTweet.length) { return initer('', 0); }
 
 
-	const { progs, textsProg, textsInfo, } = initer(tweet.full_text, mediasTweet.length);
+	const { progs, textsProg, textsInfo } = initer(tweet.full_text, mediasTweet.length);
 
 	const medias = mediasTweet.map((media, sort) => {
 		if(media.video_info) {
@@ -268,7 +304,7 @@ const onClickDown = async function(event) {
 	const idsTweet = [...new Set([...this.querySelectorAll('a[href*="/status/"]')].map(a => a.href.match(/\/status\/(\d+)/)?.[1]))];
 
 	for(const idTweet of idsTweet) {
-		downloadTweetMedia(idTweet);
+		downloadTweetMedia(idTweet, idsTweet);
 	}
 };
 
