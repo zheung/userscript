@@ -1,22 +1,52 @@
 // ==UserScript==
 // @name        bilibili-media-fetch
-// @description 2024.05.17.15
-// @namespace   https://danor.app/
-// @version     0.0.1
+// @description 2025.07.08 18
+// @namespace   https://danor.app
+// @version     0.0.4
 // @author      DanoR
 // @grant       GM_getResourceText
 // @grant       GM_addStyle
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       unsafeWindow
+// @require     https://www.unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js
 // @match       *://*.bilibili.com/video/*
 // @noframes
 // ==/UserScript==
 
+/* global FFmpeg */
+
 import FetchManager from './lib/fetch-manager.js';
 import { G } from './lib/logger.js';
-import { faFileAudio, faFileVideo, faPhotoVideo } from '@fortawesome/free-solid-svg-icons';
 
+import { faFileAudio, faFileVideo, faFilm } from '@fortawesome/free-solid-svg-icons';
+
+
+
+let ffmpegLoad;
+try {
+	ffmpegLoad = FFmpeg.createFFmpeg({
+		corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+		mainName: 'main',
+		log: false
+	});
+}
+catch(error) { G.error(error.message ?? error); }
+
+const ffmpeg = ffmpegLoad;
+
+(async () => {
+	try {
+		await ffmpeg.load();
+
+		G.info('init-ffmpeg', '✔');
+
+		if(localStorage.getItem(`${GM_info.script.name}/auto-start`)) {
+			// download();
+		}
+	}
+	catch(error) { G.error('init-ffmpeg', '✖', error.message, error.stack); }
+})();
 
 
 const renderSize = value => {
@@ -49,7 +79,7 @@ P.part = pages?.find(page => page.page == P.p)?.part;
 const namePrefix = `bilibili@${P.uid}#${P.uname}@${P.slot}#${P.title}` + (pages?.length > 1 ? `@p${P.p}#${P.part}` : '');
 
 /** @type {Object[]} */
-const optionsVideo = PD.support_formats.map(formatSupport => formatSupport.codecs.map(codec => {
+const optionsVideo = PD.support_formats.map(formatSupport => (formatSupport.codecs ?? []).map(codec => {
 	const video = PD.dash.video.find(v => v.id == formatSupport.quality && v.codecs == codec);
 
 	return {
@@ -59,20 +89,38 @@ const optionsVideo = PD.support_formats.map(formatSupport => formatSupport.codec
 		codecFull: codec,
 		resolution: video ? `${video.width}x${video.height}@${Number(video.frame_rate).toFixed(0)}` : '',
 		bandwidth: video ? renderSize(video.bandwidth) : 0,
+		bandwidthRaw: video?.bandwidth ?? 0,
 		media: video,
 	};
 })).flat().filter(o => o);
 
+if(PD.durl?.length) {
+	const format = PD.support_formats.find(format => format.quality == PD.quality);
+
+	optionsVideo.push({
+		id: format.quality,
+		desc: format.new_description,
+		codec: '',
+		codecFull: '',
+		resolution: '',
+		bandwidth: 0,
+		bandwidthRaw: 0,
+		isTrial: true,
+		media: PD.durl[0],
+	});
+}
+
 /** @type {Object[]} */
-const optionsAudio = PD.dash.audio.map(audio => ({
+const optionsAudio = (PD.dash?.audio ?? []).map(audio => ({
 	id: audio.id,
 	codec: audio.codecs.split('.')[0],
 	codecFull: audio.codecs,
 	bandwidth: renderSize(audio.bandwidth),
+	bandwidthRaw: audio.bandwidth,
 	media: audio,
-})).sort((a, b) => b.id - a.id);
+}));
 
-if(PD.dash.flac?.audio) {
+if(PD.dash?.flac?.audio) {
 	const audio = PD.dash.flac?.audio;
 	optionsAudio.unshift({
 		id: audio.id,
@@ -137,7 +185,7 @@ const fetchMediaSize = async url => {
 	return size;
 };
 
-const fetchMediaData = async (info, box) => {
+const fetchMediaData = async (info, { saveImmediately = false } = {}) => {
 	// const [proger, infoer] = box;
 
 	try {
@@ -157,10 +205,10 @@ const fetchMediaData = async (info, box) => {
 		const linkMedia = createSaveLink(`[下载${info.nameLog}]`, info.nameSave, URL.createObjectURL(new Blob([datasMedia])));
 		// infoer.parentNode.removeChild(infoer.nextElementSibling);
 		// infoer.parentNode.insertBefore(linkMedia, infoer.nextElementSibling);
-		linkMedia.click();
+		if(saveImmediately) { linkMedia.click(); }
 
 
-		G.log('download-media', '✔', info.nameLog);
+		G.info('download-media', '✔', info.nameLog);
 
 
 		return datasMedia;
@@ -177,9 +225,44 @@ const fetchMediaData = async (info, box) => {
 	}
 };
 
+const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDownload) => {
+	ffmpeg.FS('writeFile', 'video.m4s', datasVideo);
+	if(datasAudio) {
+		ffmpeg.FS('writeFile', 'audio.m4s', datasAudio);
+	}
+
+	await ffmpeg.run('-y', '-v', 'quiet',
+		'-i', 'video.m4s',
+		...(datasAudio ? ['-i', 'audio.m4s'] : []),
+		'-vcodec', 'copy', '-acodec', 'copy', '-strict', 'experimental', 'output.mp4');
+
+	const datasMixin = ffmpeg.FS('readFile', 'output.mp4');
+
+	const a = document.createElement('a');
+	a.download = nameFile;
+	a.href = URL.createObjectURL(new Blob([datasMixin]));
+	a.click();
+
+	G.info('save-mixin-media', '✔', a.download);
+
+	if(isCloseAfterDownload) { setTimeout(() => window.close(), 1000 * 5); }
+};
+
 
 /* 应用 */
 const getOptionKey = option => `${option.id}#${option.codecFull}`;
+const getMediaURL = (option, keyURL) => {
+	if(keyURL == 'baseUrl') {
+		return option.baseUrl || optionsVideo.base_url || option.url;
+	}
+	else if(keyURL.startsWith('backupUrl')) {
+		const index = keyURL[keyURL.length - 1];
+
+		return option.backupUrl?.[index] || option.backup_url?.[index]
+			|| option.backupUrl?.[0] || option.backup_url[0]
+			|| option.baseUrl || optionsVideo.base_url || option.url;
+	}
+};
 
 
 const FM = new FetchManager();
@@ -188,6 +271,8 @@ FM.$willStorageValue = true;
 FM.$widthPanel = 'calc(var(--spc) * 120)';
 
 const valuesStoraged = {
+	keyURLVideoPrefer: GM_getValue('default-keyURLVideoPrefer', 'baseUrl'),
+	keyURLAudioPrefer: GM_getValue('default-keyURLAudioPrefer', 'baseUrl'),
 	hiddenInvalidFormat: GM_getValue('default-hiddenInvalidFormat', true),
 	codecPrefer: GM_getValue('default-codecPrefer', false),
 };
@@ -206,6 +291,7 @@ const filterVideoOptions = values => optionsVideo
 		return true;
 	});
 
+
 FM.$panels = [{
 	id: 'video',
 	type: 'select-grid',
@@ -218,9 +304,7 @@ FM.$panels = [{
 		{ key: 'bandwidth', text: '带宽' },
 	],
 	options: filterVideoOptions(valuesStoraged),
-	handle: {
-		getOptionKey
-	}
+	handle: { getOptionKey }
 }, {
 	id: 'audio',
 	type: 'select-grid',
@@ -232,9 +316,7 @@ FM.$panels = [{
 		{ key: 'bandwidth', text: '带宽' },
 	],
 	options: optionsAudio,
-	handle: {
-		getOptionKey
-	}
+	handle: { getOptionKey }
 }, {
 	id: 'functions',
 	title: '功能',
@@ -242,94 +324,136 @@ FM.$panels = [{
 	functions: [{
 		id: 'fetch-audio-single',
 		text: '下载完整视频',
-		icon: faPhotoVideo,
-		async handle(C) {
-			const keyAudio = C.values.audio;
+		icon: faFilm,
+		async handle(states) {
+			if(!ffmpeg.isLoaded()) { G.info('ffmpeg not loaded'); }
 
-			const audio = optionsAudio.find(audio => getOptionKey(audio) == keyAudio)?.media;
+			const keyVideo = states.$values.value.video;
+			const keyAudio = states.$values.value.audio;
+
+			const optionVideo = optionsVideo.find(video => getOptionKey(video) == keyVideo);
+			const optionAudio = optionsAudio.find(audio => getOptionKey(audio) == keyAudio);
+
+			const video = optionVideo?.media;
+			const audio = optionAudio?.media;
+
+			const urlVideo = video ? getMediaURL(video, states.$values.value.keyURLVideoPrefer) : null;
+			const urlAudio = audio ? getMediaURL(audio, states.$values.value.keyURLAudioPrefer) : null;
 
 
-			const infoFetchMedia = {};
-			infoFetchMedia.url = audio.baseUrl;
-			infoFetchMedia.nameLog = '视频';
-			infoFetchMedia.nameSave = `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_');
-			infoFetchMedia.size = await fetchMediaSize(infoFetchMedia.url);
+			const [datasVideo, datasAudio] = await Promise.all([
+				urlVideo ? fetchMediaData({
+					url: urlVideo,
+					nameLog: '视频',
+					nameSave: `${namePrefix}@video#${keyVideo}.m4s`.replace(/[~/]/g, '_'),
+					size: await fetchMediaSize(urlVideo),
+				}) : null,
 
-			await fetchMediaData(infoFetchMedia);
+				urlAudio ? fetchMediaData({
+					url: urlAudio,
+					nameLog: '音频',
+					nameSave: `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_'),
+					size: await fetchMediaSize(urlAudio),
+				}) : null,
+			]);
+
+
+			const nameMixin = !optionVideo.isTrial
+				? `${namePrefix}@${Math.min(video.width, video.height)}p#${video.bandwidth}.mp4`.replace(/[~/]/g, '_')
+				: `${namePrefix}@trial.mp4`.replace(/[~/]/g, '_');
+
+
+			if(ffmpeg.isLoaded()) { mixinMediaData(datasVideo, datasAudio, nameMixin); }
+			else { G.info('ffmpeg not loaded'); }
 		}
 	}, {
 		id: 'fetch-audio-single',
 		text: '单独下载视频',
 		icon: faFileVideo,
-		async handle(C) {
-			const keyAudio = C.values.audio;
+		async handle(states) {
+			const keyVideo = states.$values.value.video;
 
-			const audio = optionsAudio.find(audio => getOptionKey(audio) == keyAudio)?.media;
+			const video = optionsVideo.find(video => getOptionKey(video) == keyVideo)?.media;
+
+			const url = getMediaURL(video, states.$values.value.keyURLVideoPrefer);
 
 
-			const infoFetchMedia = {};
-			infoFetchMedia.url = audio.baseUrl;
-			infoFetchMedia.nameLog = '视频';
-			infoFetchMedia.nameSave = `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_');
-			infoFetchMedia.size = await fetchMediaSize(infoFetchMedia.url);
-
-			await fetchMediaData(infoFetchMedia);
+			await fetchMediaData({
+				url: url,
+				nameLog: '视频',
+				nameSave: `${namePrefix}@video#${keyVideo}.m4s`.replace(/[~/]/g, '_'),
+				size: await fetchMediaSize(url),
+			}, { saveImmediately: true });
 		}
 	}, {
 		id: 'fetch-audio-single',
 		text: '单独下载音频',
 		icon: faFileAudio,
-		async handle(C) {
-			const keyAudio = C.values.audio;
+		async handle(states) {
+			const keyAudio = states.$values.value.audio;
 
 			const audio = optionsAudio.find(audio => getOptionKey(audio) == keyAudio)?.media;
 
+			const url = getMediaURL(audio, states.$values.value.keyURLAudioPrefer);
 
-			const infoFetchMedia = {};
-			infoFetchMedia.url = audio.baseUrl;
-			infoFetchMedia.nameLog = '视频';
-			infoFetchMedia.nameSave = `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_');
-			infoFetchMedia.size = await fetchMediaSize(infoFetchMedia.url);
 
-			await fetchMediaData(infoFetchMedia);
+			await fetchMediaData({
+				url: url,
+				nameLog: '音频',
+				nameSave: `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_'),
+				size: await fetchMediaSize(url),
+			}, { saveImmediately: true });
 		}
 	}]
 }, {
 	id: 'configs',
 	title: '选项',
 	type: 'configs',
-	closedDefault: true,
 	configs: [{
-		key: 'hiddenInvalidFormat',
+		key: 'keyURLVideoPrefer',
 		type: 'switch-button',
-		label: '无效格式',
-		options: [{ text: '隐藏', value: true }, { text: '显示', value: false }],
-		click(config, C, handleDefault) {
-			handleDefault(config, C);
-
-			const panel = C.panels.find(panel => panel.id == 'video');
-
-			panel.options = filterVideoOptions(C.values);
-		}
+		label: '视频偏好CDN',
+		options: [{ text: '基础', value: 'baseUrl' }, { text: '后备1', value: 'backupUrl1' }, { text: '后备2', value: 'backupUrl2' }, { text: '后备3', value: 'backupUrl3' }],
+		click(config, states, handleDefault) { handleDefault(config, states); }
+	}, {
+		key: 'keyURLAudioPrefer',
+		type: 'switch-button',
+		label: '音频偏好CDN',
+		options: [{ text: '基础', value: 'baseUrl' }, { text: '后备1', value: 'backupUrl1' }, { text: '后备2', value: 'backupUrl2' }, { text: '后备3', value: 'backupUrl3' }],
+		click(config, states, handleDefault) { handleDefault(config, states); }
 	}, {
 		key: 'codecPrefer',
 		type: 'switch-button',
 		label: '偏好编码',
-		options: [{ text: 'AVC', value: 'avc1' }, { text: 'AV1', value: 'av01', }, { text: 'HEVC', value: 'hev1', }, { text: '无', value: false }],
-		click(config, C, handleDefault) {
-			handleDefault(config, C);
+		options: [{ text: 'AVC', value: 'avc1' }, { text: 'AV1', value: 'av01' }, { text: 'HEVC', value: 'hev1' }, { text: '无', value: false }],
+		click(config, states, handleDefault) {
+			handleDefault(config, states);
 
-			const panel = C.panels.find(panel => panel.id == 'video');
+			const panel = states.$panels.value.find(panel => panel.id == 'video');
 
-			panel.options = filterVideoOptions(C.values);
+			panel.options = filterVideoOptions(states.$values.value);
+		}
+	}, {
+		key: 'hiddenInvalidFormat',
+		type: 'switch-button',
+		label: '无效格式',
+		options: [{ text: '隐藏', value: true }, { text: '显示', value: false }],
+		click(config, states, handleDefault) {
+			handleDefault(config);
+
+			const panel = states.$panels.value.find(panel => panel.id == 'video');
+
+			panel.options = filterVideoOptions(states.$values.value);
 		}
 	}],
 
 }];
 
 FM.$values = {
-	video: getOptionKey(optionsVideo[0]),
-	audio: getOptionKey(optionsAudio[0]),
+	video: getOptionKey(optionsVideo.toSorted((a, b) => b.id - a.id || b.bandwidthRaw - a.bandwidthRaw)[0]),
+	audio: optionsAudio[0] ? getOptionKey(optionsAudio[0]) : '',
+	keyURLVideoPrefer: valuesStoraged.keyURLVideoPrefer,
+	keyURLAudioPrefer: valuesStoraged.keyURLAudioPrefer,
 	hiddenInvalidFormat: valuesStoraged.hiddenInvalidFormat,
 	codecPrefer: valuesStoraged.codecPrefer,
 };

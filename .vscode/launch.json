@@ -4,14 +4,14 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Rollup Current UserScript",
+			"name": "Vite Current UserScript",
 			"console": "integratedTerminal",
 			"skipFiles": [
 				"<node_internals>/**"
 			],
 			"cwd": "${workspaceFolder}",
 			"runtimeExecutable": "node",
-			"program": "rollup-script.js",
+			"program": "vite-script.js",
 			"args": [
 				"${relativeFile}"
 			]

@@ -4,7 +4,7 @@ import { defineConfig, presetWind3 as getPresetWind3 } from 'unocss';
 
 const presetWind3 = getPresetWind3();
 export default defineConfig({
-	content: ['./src/**/*.sass'],
+	content: ['./src/**/*.{vue,sass}'],
 	shortcuts: {
 		inblock: 'inline-block align-top',
 		elli: 'overflow-hidden whitespace-nowrap text-ellipsis',
