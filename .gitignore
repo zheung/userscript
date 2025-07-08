@@ -3,6 +3,5 @@
 /test/*.local.*
 /dist
 /config
-/dev-vue
 /src/@test-script.user.js
 /src/index.html
