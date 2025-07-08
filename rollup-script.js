@@ -24,12 +24,10 @@ const fileInput = process.argv[2];
 const pathInput = resolve(cwd, fileInput);
 const pathParsedInput = parse(pathInput);
 
-const pathOutput = resolve(C.dirDist, pathParsedInput.base);
-
-
 const textInput = readFileSync(pathInput, 'utf-8');
 const nameMetaInput = textInput.match(/==UserScript==.*(?:@name +(.+?)\n).*==\/UserScript==/ms)?.[1];
 
+const pathOutput = resolve(C.dirDist, `${nameMetaInput}.user.js`);
 
 globalThis.console.log('目标脚本', pathParsedInput.base);
 globalThis.console.log('脚本名称', nameMetaInput);
@@ -70,5 +68,5 @@ if(output.output.length) {
 	// 出现因上一段代码不规范，导致两段代码连在一起的情况，故追加换行符到文件头中
 	writeFileSync(pathOutput, '\n' + readFileSync(pathOutput, 'utf-8'));
 
-	spawnSync(C.pathChrome, [`http://userscript.localhost/${pathParsedInput.base}`]);
+	spawnSync(C.pathChrome, [`http://userscript.localhost/${parse(pathOutput).base}`]);
 }
