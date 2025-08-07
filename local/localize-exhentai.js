@@ -112,6 +112,7 @@ multiple orgasms:连续高潮
 
 # 关系
 femdom:女主调教
+smalldom:逆体格调教
 rape:强暴
 incest:乱伦
 prostitution:卖淫
@@ -257,6 +258,7 @@ gyaru-oh:辣男
 gyaru:辣妹
 ponygirl:马尾娘
 magical girl:魔法少女
+mesugaki:雌小鬼
 
 ## 物种
 minigirl:迷你娘

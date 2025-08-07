@@ -14,8 +14,7 @@ if('2' in process.argv == false) { throw Error('缺少目标脚本参数'); }
 
 
 const dirWorking = process.cwd();
-// const fileScript = process.argv[2];
-const fileScript = 'src\\bilibili-media-fetch.user.js';
+const fileScript = process.argv[2];
 const pathScript = resolve(dirWorking, fileScript);
 const pathParsedScript = parse(pathScript);
 
