@@ -1,8 +1,9 @@
-import pMap from 'p-map';
+import 'virtual:uno.css';
 
+import pMap from 'p-map';
 import { createApp } from 'vue';
 
-import App, { $panels, $values, $widthPanel, $willStorageValue } from './manager.vue';
+import App, { $panels, $values, $widthPanel, $willStorageValue, $colorMain } from './manager.vue';
 
 
 
@@ -10,7 +11,7 @@ export default class FetchManager {
 	static pMap = pMap;
 
 
-	constructor() { this.initUI(); }
+	constructor(colorMain) { this.initUI(colorMain); }
 
 	create(urls, mapper, concurrency = Infinity) {
 		return pMap(urls, mapper, { concurrency });
@@ -19,12 +20,14 @@ export default class FetchManager {
 	elApp;
 	app;
 
-	initUI(colorTheme = '#1FAAF1') {
+	initUI(colorMain = '#1FAAF1') {
 		const elApp = this.elApp = document.createElement(`danor-${GM_info.script.name}`);
 
 		document.body.appendChild(elApp);
 
 		this.app = createApp(App).mount(`danor-${GM_info.script.name}`);
+
+		$colorMain.value = colorMain;
 	}
 
 

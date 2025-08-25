@@ -1,5 +1,7 @@
 <template>
-	<p-fetch-manager>
+	<p-fetch-manager
+		:style="{ '--cMain': $colorMain }"
+	>
 		<p-open-button v-show="!$openedPanel" style-button @mouseenter="$openedPanel = true">&lt;</p-open-button>
 		<p-main-box
 			v-show="$pinnedPanel || $openedPanel"
@@ -72,6 +74,7 @@ export const $pinnedPanel = ref(GM_getValue('default-pinnedPanel', false));
 export const $panels = ref([]);
 export const $widthPanel = ref('480px');
 export const $willStorageValue = ref(false);
+export const $colorMain = ref('#1FAAF1');
 
 export const $values = ref({
 	video: null,
@@ -127,7 +130,7 @@ p-fetch-manager
 	--cWhite: #FAFAFA
 	--cBlack: #27272A
 
-	--cBase: #00AEEC
+	--cBase: #1FAAF1
 	--cBaseComple: rgb(from var(--cBase) calc(255 - r) calc(255 - g) calc(255 - b))
 
 	--cBaseOnWhite: #00AEEC
@@ -184,7 +187,7 @@ p-fetch-manager
 
 	p-main-box
 		@apply fixed block top-16 right-[-2px] p-2 max-h-[calc(100vh-5rem-2vh)]
-		@apply bg-[var(--cBack)] rounded-l-md shadow-mdd
+		@apply bg-[var(--cBack)] rounded-l-md shadow-md
 		@apply border-2 border-[var(--cMain)] overflow-auto
 
 		p-main
