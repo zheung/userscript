@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { build } from 'vite';
 import pluginVue from '@vitejs/plugin-vue';
+import pluginUno from 'unocss/vite';
 
 
 
@@ -40,6 +41,7 @@ const { output } = await build({
 	mode: 'production',
 	clearScreen: false,
 	plugins: [
+		pluginUno(),
 		pluginVue({
 			template: {
 				compilerOptions: {
@@ -53,6 +55,7 @@ const { output } = await build({
 	build: {
 		target: 'esnext',
 		minify: false,
+		modulePreload: { polyfill: false },
 		write: false,
 	},
 	optimizeDeps: {
@@ -63,8 +66,19 @@ const { output } = await build({
 });
 
 
-const code = output.find(o => o.name == 'index' && o.code)?.code;
-const codeStyle = `\nGM_addStyle(\`${output.find(o => o.fileName?.endsWith('.css') && o.source)?.source.trim()}\`);\n`;
-writeFileSync(resolve(C.dirDist, `${nameMetaScript}.user.js`), codeStyle + code);
 
-spawnSync(C.pathChrome, [`http://userscript.localhost/${nameMetaScript}.user.js`]);
+let code = output.find(o => o.name == 'index' && o.code)?.code;
+
+const codeStyle = output.find(o => o.fileName?.endsWith('.css') && o.source);
+if(codeStyle) { code = `\nGM_addStyle(\`${codeStyle}\`);\n` + code; }
+
+
+if(code) {
+	writeFileSync(resolve(C.dirDist, `${nameMetaScript}.user.js`), code);
+}
+
+if(C.pathChrome) {
+	spawnSync(C.pathChrome,
+		[`http://userscript.localhost/${nameMetaScript}.user.js`]
+	);
+}
