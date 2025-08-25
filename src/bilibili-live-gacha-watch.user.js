@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name        bilibili-live-gacha-watch
-// @description 2025.08.24 19
-// @namespace   https://danor.app/
-// @version     1.3.0
+// @description 【哔哩哔哩】直播天选/上舰红包监控提醒
+// @namespace   https://danor.app
+// @version     2.0.0+25082511
 // @author      DanoR
 // @grant       GM_getResourceURL
-// @resource    tianxuan.wav file:///D:/desk/@v/voice/tianxuan.wav
-// @resource    tianxuan-kaijiang.mp3 file:///D:/desk/@v/voice/tianxuan-kaijiang.mp3
-// @resource    jianbao.wav file:///D:/desk/@v/voice/jianbao-maimai.wav
+// @resource    tianxuan.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan.wav
+// @resource    tianxuan-opened.mp3 file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan-opened.mp3
+// @resource    jianbao.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao-maimai.wav
+// @resource    jianbao-opened.mp3 file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao-opened.mp3
 // @match       *://live.bilibili.com/*
 // ==/UserScript==
 
@@ -15,82 +16,98 @@ import { G } from './lib/logger.js';
 
 
 
-let hasTianxuanLast = false;
-let domTianxuanLast = null;
+const playAlert = (name, typeMine) => {
+	const audio = new Audio(GM_getResourceURL(name).replace(/^data:application;/, `data:${typeMine};`));
+	audio.volume = 0.5;
 
-let hasJianbaoLast = false;
-let domJianbaoLast = null;
+	return audio.play();
+};
 
-const prefixAlertTianxuan = '【天选】';
-const prefixAlertJianbao = '【舰包】';
-setInterval(() => {
-	const documentTop = window.top.document;
+
+const config$type = {
+	tianxuan: {
+		elLast: null,
+		openedLast: false,
+		textOpen: '已开奖',
+		textAlert: '【天选】',
+		audioFound: { name: 'tianxuan.wav', typeMine: 'audio/wav' },
+		audioOpened: { name: 'tianxuan-opened.mp3', typeMine: 'audio/mp3' },
+	},
+	jianbao: {
+		elLast: null,
+		openedLast: false,
+		textOpen: '已开奖',
+		textAlert: '【舰包】',
+		audioFound: { name: 'jianbao.wav', typeMine: 'audio/wav' },
+		audioOpened: { name: 'jianbao-opened.mp3', typeMine: 'audio/mp3' },
+	},
+};
+
+
+/**
+ * @param {string} type
+ * @param {string|Function} selector
+ * @param {Document} documentTop
+ */
+const checkGacha = (type, selector, documentTop) => {
+	const el = typeof selector == 'function' ? selector(type, documentTop) : documentTop.querySelector(selector);
+
+	const config = config$type[type];
+	const { elLast, openedLast, textOpen, textAlert, audioFound, audioOpened } = config;
+
 	const titleTop = documentTop.title;
 
+	// 有抽奖
+	if(el) {
+		const opened = el.innerText.includes(textOpen);
 
-	let domTianxuan = document.querySelector('.anchor-lottery-entry');
+		// 抽奖未开奖
+		if(!opened) {
+			// 上次无抽奖 或 上次元素不同 ==> 通知
+			if(
+				!elLast ||
+				elLast !== el
+			) {
+				playAlert(audioFound.name, audioFound.typeMine);
 
-	if(domTianxuan?.innerText.includes('已开奖')) {
-		if(domTianxuanLast) {
-			domTianxuanLast = null;
+				G.info(`发现新${textAlert}！`);
+			}
 
-			G.info(`${prefixAlertTianxuan}已开奖啦`);
 
-			new Audio(GM_getResourceURL('tianxuan-kaijiang.mp3').replace(/^data:application;/, 'data:audio/wav;')).play();
+			// 来回切换网页标题提示
+			documentTop.title = titleTop.includes(textAlert) ? titleTop.replace(textAlert, '') : `${textAlert}${titleTop}`;
 		}
-
-		domTianxuan = null;
-	}
-
-	if(domTianxuan) {
-		if(!hasTianxuanLast || domTianxuanLast !== domTianxuan) {
-			new Audio(GM_getResourceURL('tianxuan.wav').replace(/^data:application;/, 'data:audio/wav;')).play();
-
-			G.info(`发现有一个${prefixAlertTianxuan}`);
-		}
-
-
-		domTianxuanLast = domTianxuan;
-		hasTianxuanLast = true;
-
-
-		if(titleTop.includes(prefixAlertTianxuan)) {
-			documentTop.title = titleTop.replace(prefixAlertTianxuan, '');
-		}
+		// 抽奖已开奖
 		else {
-			documentTop.title = prefixAlertTianxuan + titleTop;
-		}
-	}
-	else if(hasTianxuanLast) {
-		hasTianxuanLast = false;
+			// 上次无抽奖 或 上次未开奖 或 上次元素不同 ==> 通知
+			if(
+				!elLast ||
+				!openedLast ||
+				elLast !== el
+			) {
+				playAlert(audioOpened.name, audioOpened.typeMine);
 
-		documentTop.title = titleTop.replace(prefixAlertTianxuan, '');
-	}
-
-
-	const domJianbao = document.querySelector('.popularity-red-envelope-entry:has(.entry-icon[style*=guard-icon])');
-	if(domJianbao || domJianbaoLast !== domJianbao) {
-		if(!hasJianbaoLast) {
-			new Audio(GM_getResourceURL('jianbao.wav').replace(/^data:application;/, 'data:audio/wav;')).play();
-
-			G.info(`发现有一个${prefixAlertJianbao}`);
+				G.info(`${textAlert}开奖啦！`);
+			}
 		}
 
-
-		domJianbaoLast = domJianbao;
-		hasJianbaoLast = true;
-
-
-		if(titleTop.includes(prefixAlertJianbao)) {
-			documentTop.title = titleTop.replace(prefixAlertJianbao, '');
-		}
-		else {
-			documentTop.title = prefixAlertJianbao + titleTop;
-		}
+		config.openedLast = opened;
 	}
-	else if(hasJianbaoLast) {
-		hasJianbaoLast = false;
+	// 无抽奖 ==> 清理
+	else {
+		documentTop.title = titleTop.replace(textAlert, '');
 
-		documentTop.title = titleTop.replace(prefixAlertJianbao, '');
+		config.openedLast = false;
 	}
+
+	config.elLast = el;
+};
+
+
+
+setInterval(() => {
+	const documentTop = window.top.document;
+
+	checkGacha('tianxuan', '.anchor-lottery-entry', documentTop);
+	checkGacha('jianbao', '.popularity-red-envelope-entry:has(.entry-icon[style*=guard-icon])', documentTop);
 }, 2000);

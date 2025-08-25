@@ -5,3 +5,6 @@
 /config
 /src/@test-script.user.js
 /src/index.html
+
+# script
+/src/bilibili-live-gacha-watch/unused
