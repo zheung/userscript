@@ -2,12 +2,12 @@
 // @name        bilibili-live-gacha-watch
 // @description 【哔哩哔哩】直播天选/上舰红包监控提醒
 // @namespace   https://danor.app
-// @version     2.0.0+25082511
+// @version     2.0.1+25082900
 // @author      DanoR
 // @grant       GM_getResourceURL
 // @resource    tianxuan.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan.wav
 // @resource    tianxuan-opened.mp3 file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan-opened.mp3
-// @resource    jianbao.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao-maimai.wav
+// @resource    jianbao.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao.wav
 // @resource    jianbao-opened.mp3 file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao-opened.mp3
 // @match       *://live.bilibili.com/*
 // ==/UserScript==
@@ -44,13 +44,14 @@ const config$type = {
 };
 
 
+const documentTop = window.top.document;
+
 /**
  * @param {string} type
  * @param {string|Function} selector
- * @param {Document} documentTop
  */
-const checkGacha = (type, selector, documentTop) => {
-	const el = typeof selector == 'function' ? selector(type, documentTop) : documentTop.querySelector(selector);
+const checkGacha = (type, selector) => {
+	const el = typeof selector == 'function' ? selector(type, document) : document.querySelector(selector);
 
 	const config = config$type[type];
 	const { elLast, openedLast, textOpen, textAlert, audioFound, audioOpened } = config;
@@ -106,8 +107,6 @@ const checkGacha = (type, selector, documentTop) => {
 
 
 setInterval(() => {
-	const documentTop = window.top.document;
-
-	checkGacha('tianxuan', '.anchor-lottery-entry', documentTop);
-	checkGacha('jianbao', '.popularity-red-envelope-entry:has(.entry-icon[style*=guard-icon])', documentTop);
+	checkGacha('tianxuan', '.anchor-lottery-entry');
+	checkGacha('jianbao', '.popularity-red-envelope-entry:has(.entry-icon[style*=guard-icon])');
 }, 2000);
