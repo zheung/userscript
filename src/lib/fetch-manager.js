@@ -3,7 +3,7 @@ import 'virtual:uno.css';
 import pMap from 'p-map';
 import { createApp } from 'vue';
 
-import App, { $panels, $values, $widthPanel, $willStorageValue, $colorMain } from './manager.vue';
+import App, { $panels, $values, $widthPanel, $willStorageValue, $colorMain } from './fetch-manager.vue';
 
 
 
