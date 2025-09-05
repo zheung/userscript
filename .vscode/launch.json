@@ -4,7 +4,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Vite Current UserScript",
+			"name": "vite userscript",
 			"console": "integratedTerminal",
 			"skipFiles": [
 				"<node_internals>/**"
@@ -12,6 +12,21 @@
 			"cwd": "${workspaceFolder}",
 			"runtimeExecutable": "node",
 			"program": "vite-script.js",
+			"args": [
+				"${relativeFile}"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "vite userscript (watch)",
+			"console": "integratedTerminal",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "node",
+			"program": "vite-script.watch.js",
 			"args": [
 				"${relativeFile}"
 			]

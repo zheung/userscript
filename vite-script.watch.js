@@ -27,6 +27,7 @@ globalThis.console.log('脚本文件', pathParsedScript.base);
 globalThis.console.log('脚本名称', nameMetaScript);
 
 
+
 const dirPackage = fileURLToPath(new URL('.', import.meta.url));
 const pathEntry = resolve(dirPackage, 'src', 'index.html');
 writeFileSync(pathEntry,
@@ -37,7 +38,37 @@ writeFileSync(pathEntry,
 );
 
 
-const { output: outputs } = await build({
+
+/** @type {import('vite').Rollup.OutputPluginOption} */
+const pluginUserscriptMixin = {
+	name: 'rollup-plugin-userscript-mixin',
+	generateBundle: {
+		order: 'post',
+		handler(options, bundle) {
+			const outputs = Object.values(bundle);
+			for(const key in bundle) { delete bundle[key]; }
+
+			let code = outputs.find(o => o.name == 'index' && o.code)?.code;
+
+			const assetStyle = outputs.find(o => o.fileName?.endsWith('.css') && o.source);
+			if(assetStyle) { code = `\nGM_addStyle(\`${assetStyle.source.trim()}\`);\n${code}`; }
+
+
+			if(code) {
+				this.emitFile({
+					type: 'prebuilt-chunk',
+					fileName: `${nameMetaScript}.user.js`,
+					code
+				});
+			}
+		}
+	}
+};
+
+
+
+/** @type {import('vite').Rollup.RollupWatcher} */
+const watcherRollup = await build({
 	mode: 'production',
 	clearScreen: false,
 	plugins: [
@@ -57,28 +88,26 @@ const { output: outputs } = await build({
 		minify: false,
 		modulePreload: { polyfill: false },
 		write: false,
+		watch: { include: [fileScript] },
+		outDir: C.dirDist,
+		emptyOutDir: false,
+		rollupOptions: {
+			output: { plugins: [pluginUserscriptMixin] }
+		}
 	},
 	optimizeDeps: {
-		esbuildOptions: {
-			target: 'esnext'
-		}
+		esbuildOptions: { target: 'esnext' }
 	},
 });
 
+watcherRollup.on('event', event => {
+	if(event.code != 'BUNDLE_END') { return; }
 
+	globalThis.console.log('脚本构建完成');
 
-let code = outputs.find(o => o.name == 'index' && o.code)?.code;
-
-const codeStyle = outputs.find(o => o.fileName?.endsWith('.css') && o.source);
-if(codeStyle) { code = `\nGM_addStyle(\`${codeStyle.source.trim()}\`);\n` + code; }
-
-
-if(code) {
-	writeFileSync(resolve(C.dirDist, `${nameMetaScript}.user.js`), code);
-}
-
-if(C.openLink && C.pathChrome) {
-	spawnSync(C.pathChrome,
-		[`http://userscript.localhost/${nameMetaScript}.user.js`]
-	);
-}
+	if(C.openLink && C.pathChrome) {
+		spawnSync(C.pathChrome, [
+			`http://userscript.localhost/${nameMetaScript}.user.js`
+		]);
+	}
+});

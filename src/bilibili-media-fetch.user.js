@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name        bilibili-media-fetch
-// @description 2025.07.08 18
 // @namespace   https://danor.app
-// @version     0.0.4
+// @version     2.0.0+25090116
 // @author      DanoR
-// @grant       GM_getResourceText
+// @description 【哔哩哔哩】视频音频下载
 // @grant       GM_addStyle
 // @grant       GM_setValue
 // @grant       GM_getValue
@@ -16,7 +15,7 @@
 
 /* global FFmpeg */
 
-import FetchManager from './lib/fetch-manager.js';
+import { FetchManager } from './lib/fetch-manager.vue';
 import { G } from './lib/logger.js';
 
 import { faFileAudio, faFileVideo, faFilm } from '@fortawesome/free-solid-svg-icons';
@@ -133,9 +132,7 @@ if(PD.dash?.flac?.audio) {
 
 
 /* 脚本功能 */
-
-
-const createSaveLink = (innerHTML, download, href, title) => {
+const createSaveLink = (download, href, innerHTML = '', title) => {
 	const a = document.createElement('a');
 
 	a.setAttribute('saver', '');
@@ -185,41 +182,35 @@ const fetchMediaSize = async url => {
 	return size;
 };
 
-const fetchMediaData = async (info, { saveImmediately = false } = {}) => {
-	// const [proger, infoer] = box;
-
+const fetchMediaData = async (media, { saveImmediately = false, updateProg = () => { } } = {}) => {
 	try {
-		const responseGet = await fetch(info.url);
+		const responseGet = await fetch(media.url);
 
 		const reader = responseGet.body.getReader();
 
-		const datasMedia = new Uint8Array(info.size);
+		const datasMedia = new Uint8Array(media.size);
 
 		await readReader(reader, async (data, sizeReadAfter, sizeRead) => {
 			datasMedia.set(data, sizeRead);
 
-			// updateProg(sizeReadAfter, II.size, box);
+			updateProg(null, sizeReadAfter, media);
 		});
 
 
-		const linkMedia = createSaveLink(`[下载${info.nameLog}]`, info.nameSave, URL.createObjectURL(new Blob([datasMedia])));
-		// infoer.parentNode.removeChild(infoer.nextElementSibling);
-		// infoer.parentNode.insertBefore(linkMedia, infoer.nextElementSibling);
-		if(saveImmediately) { linkMedia.click(); }
+		if(saveImmediately) {
+			createSaveLink(media.nameSave, URL.createObjectURL(new Blob([datasMedia]))).click();
+		}
 
 
-		G.info('download-media', '✔', info.nameLog);
+		G.info('download-media', '✔', media.nameLog);
 
 
 		return datasMedia;
 	}
 	catch(error) {
-		// proger.hidden = true;
+		G.error('download-media', '✖', media.nameLog, error.message ?? error);
 
-		// infoer.innerHTML = `
-		// 	<div messager title="${error.message ?? error}">${info.nameLog} error, ${error.message ?? error}</div>
-		// `.replace(/\t|\n/g, '');
-		globalThis.console.log(1);
+		updateProg(error, null, media);
 
 		throw error;
 	}
@@ -238,19 +229,19 @@ const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDown
 
 	const datasMixin = ffmpeg.FS('readFile', 'output.mp4');
 
-	const a = document.createElement('a');
-	a.download = nameFile;
-	a.href = URL.createObjectURL(new Blob([datasMixin]));
-	a.click();
+	createSaveLink(nameFile, URL.createObjectURL(new Blob([datasMixin]))).click();
 
-	G.info('save-mixin-media', '✔', a.download);
+	G.info('save-mixin-media', '✔', nameFile);
 
 	if(isCloseAfterDownload) { setTimeout(() => window.close(), 1000 * 5); }
+
+	return datasMixin;
 };
 
 
 /* 应用 */
 const getOptionKey = option => `${option.id}#${option.codecFull}`;
+const getOptionLabel = option => option ? `${option.desc || option.bandwidth}#${option.codec}` : null;
 const getMediaURL = (option, keyURL) => {
 	if(keyURL == 'baseUrl') {
 		return option.baseUrl || optionsVideo.base_url || option.url;
@@ -264,196 +255,298 @@ const getMediaURL = (option, keyURL) => {
 	}
 };
 
+const getConfig = (key, configs, valueDefault) => configs.find(config => config.key == key)?.value ?? valueDefault;
+
+const filterVideoOptions = configs => {
+	const hiddenInvalidFormat = getConfig('hiddenInvalidFormat', configs);
+	const codecPrefer = getConfig('codecPrefer', configs);
+
+	return optionsVideo.filter(option => {
+		if(hiddenInvalidFormat && option.bandwidth == 0) { return false; }
+
+		const optionsIDSame = optionsVideo.filter(o => o.id == option.id);
+		if(codecPrefer
+			&& optionsIDSame.find(o => o.codec == codecPrefer)
+			&& option.codec != codecPrefer
+		) { return false; }
+
+		return true;
+	});
+};
+
 
 const FM = new FetchManager();
 
 FM.$willStorageValue = true;
 FM.$widthPanel = 'calc(var(--spc) * 120)';
 
-const valuesStoraged = {
-	keyURLVideoPrefer: GM_getValue('default-keyURLVideoPrefer', 'baseUrl'),
-	keyURLAudioPrefer: GM_getValue('default-keyURLAudioPrefer', 'baseUrl'),
-	hiddenInvalidFormat: GM_getValue('default-hiddenInvalidFormat', true),
-	codecPrefer: GM_getValue('default-codecPrefer', false),
-};
-const filterVideoOptions = values => optionsVideo
-	.filter(option => {
-		if(values.hiddenInvalidFormat && option.bandwidth == 0) { return false; }
-
-
-		const optionsIDSame = optionsVideo.filter(o => o.id == option.id);
-		if(values.codecPrefer
-			&& optionsIDSame.find(o => o.codec == values.codecPrefer)
-			&& option.codec != values.codecPrefer
-		) { return false; }
-
-
-		return true;
-	});
-
 
 FM.$panels = [{
 	id: 'video',
 	type: 'select-grid',
-	title: '选择视频源',
-	keyValue: 'video',
+	title: '选择源视频',
 	heads: [
 		{ key: 'desc', text: '标签', keyTitle: 'resolution' },
 		{ key: 'codec', text: '编码', keyTitle: 'codecFull' },
 		{ key: 'id', text: 'ID' },
 		{ key: 'bandwidth', text: '带宽' },
 	],
-	options: filterVideoOptions(valuesStoraged),
-	handle: { getOptionKey }
+	getOptionKey, getOptionLabel,
+	options: filterVideoOptions([
+		{ key: 'hiddenInvalidFormat', value: GM_getValue('default-hiddenInvalidFormat', true) },
+		{ key: 'codecPrefer', value: GM_getValue('default-codecPrefer', false) },
+	]),
+	value: optionsVideo.toSorted((a, b) => b.id - a.id || b.bandwidthRaw - a.bandwidthRaw)[0],
 }, {
 	id: 'audio',
 	type: 'select-grid',
-	title: '选择音频源',
-	keyValue: 'audio',
+	title: '选择源音频',
 	heads: [
 		{ key: 'id', text: 'ID' },
 		{ key: 'codec', text: '编码' },
 		{ key: 'bandwidth', text: '带宽' },
 	],
+	getOptionKey, getOptionLabel,
 	options: optionsAudio,
-	handle: { getOptionKey }
+	value: optionsAudio[0] ?? null,
 }, {
 	id: 'functions',
-	title: '功能',
-	type: 'functions',
+	// title: '功能',
+	type: 'functions-collapseless',
 	functions: [{
 		id: 'fetch-audio-single',
 		text: '下载完整视频',
 		icon: faFilm,
 		async handle(states) {
-			if(!ffmpeg.isLoaded()) { G.info('ffmpeg not loaded'); }
+			if(!ffmpeg.isLoaded()) { alert(`【${GM_info.script.name}】\nffmpeg未加载`); }
 
-			const keyVideo = states.$values.value.video;
-			const keyAudio = states.$values.value.audio;
+			const panels = states.$panels.value;
+			const configs = panels.find(panel => panel.id == 'configs').configs;
 
-			const optionVideo = optionsVideo.find(video => getOptionKey(video) == keyVideo);
-			const optionAudio = optionsAudio.find(audio => getOptionKey(audio) == keyAudio);
+			const optionVideo = panels.find(panel => panel.id == 'video')?.value;
+			if(!optionVideo) { alert(`【${GM_info.script.name}】\n没有选择源视频`); }
+
+			const optionAudio = panels.find(panel => panel.id == 'audio')?.value;
+			if(!optionAudio) { alert(`【${GM_info.script.name}】\n没有选择源音频`); }
 
 			const video = optionVideo?.media;
 			const audio = optionAudio?.media;
 
-			const urlVideo = video ? getMediaURL(video, states.$values.value.keyURLVideoPrefer) : null;
-			const urlAudio = audio ? getMediaURL(audio, states.$values.value.keyURLAudioPrefer) : null;
+			const urlVideo = video ? getMediaURL(video, getConfig('keyURLVideoPrefer', configs)) : null;
+			const urlAudio = audio ? getMediaURL(audio, getConfig('keyURLAudioPrefer', configs)) : null;
+
+			const sizeVideo = urlVideo ? await fetchMediaSize(urlVideo) : 0;
+			const sizeAudio = urlAudio ? await fetchMediaSize(urlAudio) : 0;
+
+			const labelVideo = getOptionLabel(optionVideo);
+			const labelAudio = getOptionLabel(optionAudio);
+			const nameSaveVideo = `${namePrefix}@源视频#${labelVideo}.m4s`.replace(/[~/]/g, '_');
+			const nameSaveAudio = `${namePrefix}@源音频#${labelAudio}.m4s`.replace(/[~/]/g, '_');
 
 
+			const panelProgs = states.$panels.value.find(panel => panel.id == 'progresses');
+
+			panelProgs.progs.push({ name: `源视频[${labelVideo}]\n${renderSize(sizeVideo)}`, text: '', value: 0, max: sizeVideo });
+			const progVideo = panelProgs.progs[panelProgs.progs.length - 1];
+			panelProgs.progs.push({ name: `源音频[${labelAudio}]\n${renderSize(sizeAudio)}`, text: '', value: 0, max: sizeAudio });
+			const progAudio = panelProgs.progs[panelProgs.progs.length - 1];
+
+
+			let throttleVideo = 0;
+			let throttleAudio = 0;
 			const [datasVideo, datasAudio] = await Promise.all([
-				urlVideo ? fetchMediaData({
-					url: urlVideo,
-					nameLog: '视频',
-					nameSave: `${namePrefix}@video#${keyVideo}.m4s`.replace(/[~/]/g, '_'),
-					size: await fetchMediaSize(urlVideo),
+				urlVideo ? fetchMediaData({ url: urlVideo, nameLog: 'source-video', nameSave: nameSaveVideo, size: sizeVideo }, {
+					updateProg: (error, value) => {
+						if(error) { progVideo.error = error; return progVideo.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+
+						if(!(throttleVideo++ % 10) || value == sizeVideo) {
+							progVideo.value = value;
+
+							progVideo.text = `${(value * 100 / sizeVideo).toFixed(1).padStart(5, ' ')}%`;
+						}
+					},
+				}).then(datas => {
+					progVideo.text = `<span style="color: var(--cOkay)">${progVideo.text}</span>`;
+					progVideo.button = { text: '下载', click: () => createSaveLink(nameSaveVideo, URL.createObjectURL(new Blob([datas]))).click() };
+
+					return datas;
 				}) : null,
 
-				urlAudio ? fetchMediaData({
-					url: urlAudio,
-					nameLog: '音频',
-					nameSave: `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_'),
-					size: await fetchMediaSize(urlAudio),
+				urlAudio ? fetchMediaData({ url: urlAudio, nameLog: 'source-audio', nameSave: nameSaveAudio, size: sizeAudio }, {
+					updateProg: (error, value) => {
+						if(error) { progAudio.error = error; return progAudio.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+
+						if(!(throttleAudio++ % 10) || value == sizeAudio) {
+							progAudio.value = value;
+
+							progAudio.text = `${(value * 100 / sizeAudio).toFixed(1).padStart(5, ' ')}%`;
+						}
+					},
+				}).then(datas => {
+					progAudio.text = `<span style="color: var(--cOkay)">${progAudio.text}</span>`;
+					progAudio.button = { text: '下载', click: () => createSaveLink(nameSaveAudio, URL.createObjectURL(new Blob([datas]))).click() };
+
+					return datas;
 				}) : null,
 			]);
 
 
+
+			const labelMixin = `${Math.min(video.width, video.height)}p#${video.bandwidth}`;
 			const nameMixin = !optionVideo.isTrial
-				? `${namePrefix}@${Math.min(video.width, video.height)}p#${video.bandwidth}.mp4`.replace(/[~/]/g, '_')
+				? `${namePrefix}@${labelMixin}.mp4`.replace(/[~/]/g, '_')
 				: `${namePrefix}@trial.mp4`.replace(/[~/]/g, '_');
 
 
-			if(ffmpeg.isLoaded()) { mixinMediaData(datasVideo, datasAudio, nameMixin); }
-			else { G.info('ffmpeg not loaded'); }
+			if(ffmpeg.isLoaded()) {
+				const datasMixin = await mixinMediaData(datasVideo, datasAudio, nameMixin);
+
+				panelProgs.progs.push({
+					name: `完整视频[${labelMixin}]\n${renderSize(datasMixin.length)}`,
+					text: '<span style="color: var(--cOkay)">已混流</span>', value: 1, max: 1,
+					button: { text: '下载', click: () => createSaveLink(nameMixin, URL.createObjectURL(new Blob([datasMixin]))).click() }
+				});
+			}
+			else { alert(`【${GM_info.script.name}】\nffmpeg未加载`); }
+
 		}
 	}, {
 		id: 'fetch-audio-single',
-		text: '单独下载视频',
+		text: '下载源视频',
 		icon: faFileVideo,
 		async handle(states) {
-			const keyVideo = states.$values.value.video;
+			const panels = states.$panels.value;
+			const configs = panels.find(panel => panel.id == 'configs').configs;
 
-			const video = optionsVideo.find(video => getOptionKey(video) == keyVideo)?.media;
+			const option = panels.find(panel => panel.id == 'video')?.value;
+			if(!option) { return alert(`【${GM_info.script.name}】\n没有选择源视频`); }
 
-			const url = getMediaURL(video, states.$values.value.keyURLVideoPrefer);
+			const video = option?.media;
+
+			const url = video ? getMediaURL(video, getConfig('keyURLVideoPrefer', configs)) : null;
+
+			const size = url ? await fetchMediaSize(url) : 0;
+
+			const label = getOptionLabel(option);
+			const nameSave = `${namePrefix}@源视频#${label}.m4s`.replace(/[~/]/g, '_');
 
 
-			await fetchMediaData({
-				url: url,
-				nameLog: '视频',
-				nameSave: `${namePrefix}@video#${keyVideo}.m4s`.replace(/[~/]/g, '_'),
-				size: await fetchMediaSize(url),
-			}, { saveImmediately: true });
+			const panelProgs = panels.find(panel => panel.id == 'progresses');
+
+			panelProgs.progs.push({ name: `源视频[${label}]\n${renderSize(size)}`, text: '', value: 0, max: size });
+			const prog = panelProgs.progs[panelProgs.progs.length - 1];
+
+
+			let throttle = 0;
+			const datasMedia = await fetchMediaData({ url, nameLog: `source-video#${label}`, nameSave, size }, {
+				saveImmediately: false,
+				updateProg: (error, value) => {
+					if(error) { prog.error = error; return prog.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+
+					if(!(throttle++ % 10) || value == size) {
+						prog.value = value;
+
+						prog.text = `${(value * 100 / size).toFixed(1).padStart(5, ' ')}%`;
+					}
+				},
+			});
+
+			prog.text = `<span style="color: var(--cOkay)">${prog.text}</span>`;
+			prog.button = { text: '下载', click: () => createSaveLink(nameSave, URL.createObjectURL(new Blob([datasMedia]))).click() };
 		}
 	}, {
 		id: 'fetch-audio-single',
-		text: '单独下载音频',
+		text: '下载源音频',
 		icon: faFileAudio,
 		async handle(states) {
-			const keyAudio = states.$values.value.audio;
+			const panels = states.$panels.value;
+			const configs = panels.find(panel => panel.id == 'configs').configs;
 
-			const audio = optionsAudio.find(audio => getOptionKey(audio) == keyAudio)?.media;
+			const option = panels.find(panel => panel.id == 'audio')?.value;
+			if(!option) { return alert(`【${GM_info.script.name}】\n没有选择源音频`); }
 
-			const url = getMediaURL(audio, states.$values.value.keyURLAudioPrefer);
+			const audio = option?.media;
+
+			const url = audio ? getMediaURL(audio, getConfig('keyURLAudioPrefer', configs)) : null;
+
+			const size = url ? await fetchMediaSize(url) : 0;
+
+			const label = getOptionLabel(option);
+			const nameSave = `${namePrefix}@源音频#${label}.m4s`.replace(/[~/]/g, '_');
 
 
-			await fetchMediaData({
-				url: url,
-				nameLog: '音频',
-				nameSave: `${namePrefix}@audio#${keyAudio}.m4s`.replace(/[~/]/g, '_'),
-				size: await fetchMediaSize(url),
-			}, { saveImmediately: true });
+			const panelProgs = panels.find(panel => panel.id == 'progresses');
+
+			panelProgs.progs.push({ name: `源音频[${label}]\n${renderSize(size)}`, text: '', value: 0, max: size });
+			const prog = panelProgs.progs[panelProgs.progs.length - 1];
+
+
+			let throttle = 0;
+			const datasMedia = await fetchMediaData({ url, nameLog: `source-audio#${label}`, nameSave, size }, {
+				saveImmediately: false,
+				updateProg: (error, value) => {
+					if(error) { prog.error = error; return prog.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+
+					if(!(throttle++ % 10) || value == size) {
+						prog.value = value;
+
+						prog.text = `${(value * 100 / size).toFixed(1).padStart(5, ' ')}%`;
+					}
+				},
+			});
+
+			prog.text = `<span style="color: var(--cOkay)">${prog.text}</span>`;
+			prog.button = { text: '下载', click: () => createSaveLink(nameSave, URL.createObjectURL(new Blob([datasMedia]))).click() };
 		}
 	}]
+}, {
+	id: 'progresses',
+	title: '进度',
+	type: 'progresses',
+	progs: [],
 }, {
 	id: 'configs',
 	title: '选项',
 	type: 'configs',
+	closedDefault: true,
 	configs: [{
 		key: 'keyURLVideoPrefer',
+		value: GM_getValue('default-keyURLVideoPrefer', 'baseUrl'),
 		type: 'switch-button',
 		label: '视频偏好CDN',
 		options: [{ text: '基础', value: 'baseUrl' }, { text: '后备1', value: 'backupUrl1' }, { text: '后备2', value: 'backupUrl2' }, { text: '后备3', value: 'backupUrl3' }],
-		click(config, states, handleDefault) { handleDefault(config, states); }
+		// click(config, panel, states, handleDefault) { handleDefault(config, panel, states); }
 	}, {
 		key: 'keyURLAudioPrefer',
+		value: GM_getValue('default-keyURLAudioPrefer', 'baseUrl'),
 		type: 'switch-button',
 		label: '音频偏好CDN',
 		options: [{ text: '基础', value: 'baseUrl' }, { text: '后备1', value: 'backupUrl1' }, { text: '后备2', value: 'backupUrl2' }, { text: '后备3', value: 'backupUrl3' }],
-		click(config, states, handleDefault) { handleDefault(config, states); }
 	}, {
 		key: 'codecPrefer',
+		value: GM_getValue('default-codecPrefer', false),
 		type: 'switch-button',
 		label: '偏好编码',
 		options: [{ text: 'AVC', value: 'avc1' }, { text: 'AV1', value: 'av01' }, { text: 'HEVC', value: 'hev1' }, { text: '无', value: false }],
-		click(config, states, handleDefault) {
-			handleDefault(config, states);
+		click(config, panelConfig, states, handleDefault) {
+			handleDefault(config, panelConfig, states);
 
 			const panel = states.$panels.value.find(panel => panel.id == 'video');
 
-			panel.options = filterVideoOptions(states.$values.value);
+			panel.options = filterVideoOptions(panelConfig.configs);
 		}
 	}, {
 		key: 'hiddenInvalidFormat',
+		value: GM_getValue('default-hiddenInvalidFormat', true),
 		type: 'switch-button',
 		label: '无效格式',
 		options: [{ text: '隐藏', value: true }, { text: '显示', value: false }],
-		click(config, states, handleDefault) {
+		click(config, panelConfig, states, handleDefault) {
 			handleDefault(config);
 
 			const panel = states.$panels.value.find(panel => panel.id == 'video');
 
-			panel.options = filterVideoOptions(states.$values.value);
+			panel.options = filterVideoOptions(panelConfig.configs);
 		}
 	}],
-
 }];
-
-FM.$values = {
-	video: getOptionKey(optionsVideo.toSorted((a, b) => b.id - a.id || b.bandwidthRaw - a.bandwidthRaw)[0]),
-	audio: optionsAudio[0] ? getOptionKey(optionsAudio[0]) : '',
-	keyURLVideoPrefer: valuesStoraged.keyURLVideoPrefer,
-	keyURLAudioPrefer: valuesStoraged.keyURLAudioPrefer,
-	hiddenInvalidFormat: valuesStoraged.hiddenInvalidFormat,
-	codecPrefer: valuesStoraged.codecPrefer,
-};
