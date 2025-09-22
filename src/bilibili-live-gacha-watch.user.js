@@ -2,13 +2,13 @@
 // @name        bilibili-live-gacha-watch
 // @description 【哔哩哔哩】直播天选/上舰红包监控提醒
 // @namespace   https://danor.app
-// @version     2.0.1+25082900
+// @version     2.0.2+25090520
 // @author      DanoR
 // @grant       GM_getResourceURL
 // @resource    tianxuan.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan.wav
-// @resource    tianxuan-opened.mp3 file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan-opened.mp3
 // @resource    jianbao.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao.wav
-// @resource    jianbao-opened.mp3 file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao-opened.mp3
+// @resource    tianxuan-opened.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/tianxuan-opened.wav
+// @resource    jianbao-opened.wav file:///D:/project/userscript/src/bilibili-live-gacha-watch/jianbao-opened.wav
 // @match       *://live.bilibili.com/*
 // ==/UserScript==
 
@@ -31,7 +31,7 @@ const config$type = {
 		textOpen: '已开奖',
 		textAlert: '【天选】',
 		audioFound: { name: 'tianxuan.wav', typeMine: 'audio/wav' },
-		audioOpened: { name: 'tianxuan-opened.mp3', typeMine: 'audio/mp3' },
+		audioOpened: { name: 'tianxuan-opened.wav', typeMine: 'audio/wav' },
 	},
 	jianbao: {
 		elLast: null,
@@ -39,7 +39,7 @@ const config$type = {
 		textOpen: '已开奖',
 		textAlert: '【舰包】',
 		audioFound: { name: 'jianbao.wav', typeMine: 'audio/wav' },
-		audioOpened: { name: 'jianbao-opened.mp3', typeMine: 'audio/mp3' },
+		audioOpened: { name: 'jianbao-opened.wav', typeMine: 'audio/wav' },
 	},
 };
 

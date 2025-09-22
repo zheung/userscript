@@ -77,8 +77,7 @@ if(code) {
 	writeFileSync(resolve(C.dirDist, `${nameMetaScript}.user.js`), code);
 }
 
-if(C.openLink && C.pathChrome) {
-	spawnSync(C.pathChrome,
-		[`http://userscript.localhost/${nameMetaScript}.user.js`]
-	);
-}
+const url = `http://userscript.localhost/${nameMetaScript}.user.js`;
+globalThis.console.log('本地安装地址', url);
+
+if(C.openLink && C.pathChrome) { spawnSync(C.pathChrome, [url]); }
