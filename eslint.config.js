@@ -1,10 +1,10 @@
 /**
  * @file @nuogz/dynamic-eslint-config
  * @author DanoR
- * @version 5.5.0+25090509
+ * @version 5.5.1+25090510
  * @requires globals
  * @requires @eslint/js
- * @requires @stylistic/eslint-plugin-js
+ * @requires @stylistic/eslint-plugin
  * @requires eslint-plugin-vue@^10 (optional)
  * @link https://gist.github.com/zheung/60a57c1bd87a82296fdf22dd9c277dec
  */

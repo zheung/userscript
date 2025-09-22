@@ -101,6 +101,7 @@ const watcherRollup = await build({
 });
 
 watcherRollup.on('event', event => {
+	if(event.code == 'BUNDLE_START') { return globalThis.console.log('脚本构建开始'); }
 	if(event.code != 'BUNDLE_END') { return; }
 
 	globalThis.console.log('脚本构建完成');
