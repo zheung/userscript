@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili-media-fetch
 // @namespace   https://danor.app
-// @version     2.0.0+25090116
+// @version     2.1.0+25112017
 // @author      DanoR
 // @description 【哔哩哔哩】视频音频下载
 // @grant       GM_addStyle
@@ -15,7 +15,7 @@
 
 /* global FFmpeg */
 
-import { FetchManager } from './lib/fetch-manager.vue';
+import { FetchManager, $panels, $states } from './lib/fetch-manager.vue';
 import { G } from './lib/logger.js';
 
 import { faFileAudio, faFileVideo, faFilm } from '@fortawesome/free-solid-svg-icons';
@@ -39,10 +39,6 @@ const ffmpeg = ffmpegLoad;
 		await ffmpeg.load();
 
 		G.info('init-ffmpeg', '✔');
-
-		if(localStorage.getItem(`${GM_info.script.name}/auto-start`)) {
-			// download();
-		}
 	}
 	catch(error) { G.error('init-ffmpeg', '✖', error.message, error.stack); }
 })();
@@ -550,3 +546,17 @@ FM.$panels = [{
 		}
 	}],
 }];
+
+
+const intervalAutoStart = setInterval(() => {
+	if(!localStorage.getItem(`${GM_info.script.name}/auto-start`)) { return clearInterval(intervalAutoStart); }
+	if(!ffmpeg.isLoaded()) { return; }
+	if(!$panels.value?.length) { return; }
+
+	clearInterval(intervalAutoStart);
+
+	$panels.value
+		.find(panel => panel.id == 'functions')?.functions
+		.find(func => func.id == 'fetch-audio-single')
+		?.handle($states);
+}, 1000);

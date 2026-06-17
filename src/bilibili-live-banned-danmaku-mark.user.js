@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        bilibili-live-banned-danmaku-mark
-// @description 2024.04.07.08
+// @description 2026.01.29.00
 // @namespace   https://danor.app/
-// @version     1.0.0
+// @version     1.1.0
 // @author      DanoR
 // @grant       GM_addStyle
 // @grant       unsafeWindow
@@ -37,15 +37,29 @@ hookFetch(
 		const extra = JSON.parse(result.data.mode_info.extra);
 
 
-		const eItemsDanmaku = document.querySelector('#chat-items');
-		if(eItemsDanmaku) {
+		const elItemsDanmaku = document.querySelector('#chat-items');
+		if(elItemsDanmaku) {
+			/** @type {(Node & HTMLElement)[]} */
+			const elsDanmaku = [...elItemsDanmaku.querySelectorAll('.chat-item')];
+			for(const el of elsDanmaku) {
+				if(el?.dataset?.danmaku == extra.content) {
+					const eItemDanmaku = el?.querySelector('.danmaku-item-right');
+
+					eItemDanmaku.classList.add('banned-danmaku');
+
+					return;
+				}
+			}
+
+
+
 			const observer = new MutationObserver(mutations => {
 				mutations: for(const mutation of mutations) {
 					/** @type {(Node & HTMLElement)[]} */
-					const nodes = [...mutation.addedNodes];
-					for(const node of nodes) {
-						if(node?.dataset?.danmaku == extra.content) {
-							const eItemDanmaku = node?.querySelector('.danmaku-item-right');
+					const els = [...mutation.addedNodes];
+					for(const el of els) {
+						if(el?.dataset?.danmaku == extra.content) {
+							const eItemDanmaku = el?.querySelector('.danmaku-item-right');
 
 							eItemDanmaku.classList.add('banned-danmaku');
 
@@ -57,11 +71,11 @@ hookFetch(
 				}
 			});
 
-			observer.observe(eItemsDanmaku, { childList: true, subtree: true });
+			observer.observe(elItemsDanmaku, { childList: true, subtree: true });
 
 			setTimeout(() => {
 				try { observer.disconnect(); }
-				catch(error) { void 0; }
+				catch { void 0; }
 			}, 1000 * 30);
 		}
 	}

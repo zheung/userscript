@@ -25,6 +25,7 @@ chinese:中文
 english:英文
 spanish:西班牙文
 translated:已翻译
+rough translation:粗略翻译
 group:合集
 tankoubon:单行本
 original:原创
@@ -53,6 +54,7 @@ blowjob:口交
 handjob:手交
 fisting:拳交
 paizuri:乳交
+tailjob:尾交
 clothed paizuri:衣服乳交
 multiple paizuri:多重乳交
 cunnilingus:舔阴
@@ -72,6 +74,7 @@ kissing:接吻
 parasite:寄生
 bondage:捆绑
 bdsm:BDSM
+fanny packing:人包人
 electric shocks:电击
 sumata:素股
 wrestling:摔跤
@@ -85,6 +88,8 @@ torture:拷问
 unbirth:逆出生
 forniphilia:人间家具
 smoking:性交中吸烟
+emotionless sex:无表情性交
+armpit sex:腋交
 
 ##行为细节
 wormhole:虫洞交
@@ -208,6 +213,10 @@ multiple penises:复数阴茎
 eye-covering bang:遮眼刘海
 hair buns:丸子头
 anorexic:皮包骨
+horns:角
+long tongue:长舌头
+big nipples:大乳头
+body modification:身体改造
 
 ## 着装
 masked face:蒙面

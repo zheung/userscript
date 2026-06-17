@@ -21,7 +21,8 @@ const pathParsedScript = parse(pathScript);
 
 
 const textScript = readFileSync(pathScript, 'utf-8');
-const nameMetaScript = textScript.match(/==UserScript==.*(?:@name +(.+?)\n).*==\/UserScript==/ms)?.[1];
+const meta = textScript.match(/\/\/ ==UserScript==.*?==\/UserScript==/ms)?.[0]?.trim();
+const nameMetaScript = meta.match(/==UserScript==.*(?:@name +(.+?)\n).*==\/UserScript==/ms)?.[1];
 
 globalThis.console.log('脚本文件', pathParsedScript.base);
 globalThis.console.log('脚本名称', nameMetaScript);
@@ -58,11 +59,6 @@ const { output: outputs } = await build({
 		modulePreload: { polyfill: false },
 		write: false,
 	},
-	optimizeDeps: {
-		esbuildOptions: {
-			target: 'esnext'
-		}
-	},
 });
 
 
@@ -74,6 +70,8 @@ if(codeStyle) { code = `\nGM_addStyle(\`${codeStyle.source.trim()}\`);\n` + code
 
 
 if(code) {
+	code = `${meta}\n${code}`;
+
 	writeFileSync(resolve(C.dirDist, `${nameMetaScript}.user.js`), code);
 }
 

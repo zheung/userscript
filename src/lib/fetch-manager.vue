@@ -1,14 +1,13 @@
 <template>
 	<p-fetch-manager
-		:style="{ '--cMain': $colorMain }"
-	>
+		:style="{ '--cMain': $colorMain }">
 		<p-open-button v-show="!$openedPanel" style-button @mouseenter="$openedPanel = true">&lt;</p-open-button>
 		<p-main-box
 			v-show="$pinnedPanel || $openedPanel"
 			:style="{ width: $widthPanel }"
 			@mouseleave="$openedPanel = false">
 			<p-main>
-				<p-main-title>下载管理</p-main-title>
+				<p-main-title>{{ $panels.title || '下载管理' }}</p-main-title>
 				<p-main-button style-button @click="$pinnedPanel = false, $openedPanel = false">
 					<Icon :icon="faXmark" /> 关闭
 				</p-main-button>
@@ -19,7 +18,7 @@
 
 			<template v-for="panel of $panels" :key="panel.id">
 				<details v-if="panel.type == 'select-grid'" :panel="panel.type" :open="brop(!panel.closedDefault)">
-					<summary class="cursor-pointer" :title="panel.value">{{ panel.title }} 已选: {{ panel.getOptionLabel?.(panel.value) || option.id }}</summary>
+					<summary class="cursor-pointer" :title="panel.value">{{ panel.title }} 已选: {{ panel.getOptionLabel?.(panel.value) || panel.id }}</summary>
 					<table select-grid>
 						<tr>
 							<th v-for="head of panel.heads" :key="head.id || head.key">{{ head.text }}</th>
@@ -146,12 +145,12 @@ export class FetchManager {
 export const $openedPanel = ref(false);
 export const $pinnedPanel = ref(GM_getValue('default-pinnedPanel', false));
 export const $panels = ref([]);
-export const $widthPanel = ref('480px');
+export const $widthPanel = ref('auto');
 export const $willStorageValue = ref(false);
 export const $colorMain = ref('#1FAAF1');
 
 
-const $states = { $openedPanel, $pinnedPanel, $panels, $widthPanel, $willStorageValue };
+export const $states = { $openedPanel, $pinnedPanel, $panels, $widthPanel, $willStorageValue };
 
 export const $handlesDefault = {
 	apply(config, panel, key, keyConfig) {
@@ -179,7 +178,7 @@ export const $handlesDefault = {
 		const option = options[indexNext];
 		const valueNow = config.value = option.value;
 
-		if($willStorageValue.value) { GM_setValue?.(`default-${key}`, valueNow); }
+		if ($willStorageValue.value) { GM_setValue?.(`default-${key}`, valueNow); }
 
 
 		return willReturnOption ? option : valueNow;
