@@ -1,19 +1,20 @@
 // ==UserScript==
 // @name        bilibili-media-fetch
 // @namespace   https://danor.app
-// @version     2.1.0+25112017
+// @version     2.2.0+26061716
 // @author      DanoR
 // @description 【哔哩哔哩】视频音频下载
 // @grant       GM_addStyle
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       unsafeWindow
+// @require     https://www.unpkg.com/gbk.js@0.3.0/dist/gbk2.min.js
 // @require     https://www.unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js
 // @match       *://*.bilibili.com/video/*
 // @noframes
 // ==/UserScript==
 
-/* global FFmpeg */
+/* global FFmpeg, GBK */
 
 import { FetchManager, $panels, $states } from './lib/fetch-manager.vue';
 import { G } from './lib/logger.js';
@@ -22,6 +23,7 @@ import { faFileAudio, faFileVideo, faFilm } from '@fortawesome/free-solid-svg-ic
 
 
 
+/* 预加载 */
 let ffmpegLoad;
 try {
 	ffmpegLoad = FFmpeg.createFFmpeg({
@@ -50,6 +52,12 @@ const renderSize = value => {
 
 	return `${(value / Math.pow(1024, index)).toFixed(2).padStart(6, ' ')} ${['By', 'KB', 'MB', 'GB'][index]}`;
 };
+
+
+// 预设ArrayBuffer最大是2046MB
+const sizeArrayBufferMax = Math.pow(2, 31) - Math.pow(2, 21);
+const sizeAudioMax = Math.pow(2, 27);
+const sizeVideoMax = sizeArrayBufferMax - sizeAudioMax;
 
 
 /* 网页信息处理 */
@@ -314,16 +322,14 @@ FM.$panels = [{
 		text: '下载完整视频',
 		icon: faFilm,
 		async handle(states) {
-			if(!ffmpeg.isLoaded()) { alert(`【${GM_info.script.name}】\nffmpeg未加载`); }
-
 			const panels = states.$panels.value;
 			const configs = panels.find(panel => panel.id == 'configs').configs;
 
 			const optionVideo = panels.find(panel => panel.id == 'video')?.value;
-			if(!optionVideo) { alert(`【${GM_info.script.name}】\n没有选择源视频`); }
+			if(!optionVideo) { return alert(`【${GM_info.script.name}】\n没有源视频`); }
 
 			const optionAudio = panels.find(panel => panel.id == 'audio')?.value;
-			if(!optionAudio) { alert(`【${GM_info.script.name}】\n没有选择源音频`); }
+			if(!optionAudio) { return alert(`【${GM_info.script.name}】\n没有源音频`); }
 
 			const video = optionVideo?.media;
 			const audio = optionAudio?.media;
@@ -339,6 +345,11 @@ FM.$panels = [{
 			const nameSaveVideo = `${namePrefix}@源视频#${labelVideo}.m4s`.replace(/[~/]/g, '_');
 			const nameSaveAudio = `${namePrefix}@源音频#${labelAudio}.m4s`.replace(/[~/]/g, '_');
 
+			const labelMixin = `${Math.min(video.width, video.height)}p#${video.bandwidth}`;
+			const nameMixin = !optionVideo.isTrial
+				? `${namePrefix}@${labelMixin}.mp4`.replace(/[~/]/g, '_')
+				: `${namePrefix}@trial.mp4`.replace(/[~/]/g, '_');
+
 
 			const panelProgs = states.$panels.value.find(panel => panel.id == 'progresses');
 
@@ -348,63 +359,293 @@ FM.$panels = [{
 			const progAudio = panelProgs.progs[panelProgs.progs.length - 1];
 
 
-			let throttleVideo = 0;
-			let throttleAudio = 0;
-			const [datasVideo, datasAudio] = await Promise.all([
-				urlVideo ? fetchMediaData({ url: urlVideo, nameLog: 'source-video', nameSave: nameSaveVideo, size: sizeVideo }, {
-					updateProg: (error, value) => {
-						if(error) { progVideo.error = error; return progVideo.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+			if(sizeVideo >= sizeVideoMax) {
+				let dirn = await window.showDirectoryPicker({ id: 'bilibili-media-save', mode: 'readwrite' });
 
-						if(!(throttleVideo++ % 10) || value == sizeVideo) {
-							progVideo.value = value;
 
-							progVideo.text = `${(value * 100 / sizeVideo).toFixed(1).padStart(5, ' ')}%`;
+				// 大文件：使用 File System Access API 流式写入，避免内存溢出
+				const fetchLargeVideo = async () => {
+					progVideo.text = '';
+					progVideo.value = 0;
+					progVideo.button = null;
+
+
+					/** @type {FileSystemFileHandle} */
+					let fileHandle;
+					try {
+						fileHandle = await dirn.getFileHandle(nameSaveVideo, { create: true });
+					}
+					catch {
+						progVideo.text = '<span style="color: var(--cFail)">已取消</span>';
+						progVideo.button = { text: '下载', click: fetchLargeVideo };
+
+						return;
+					}
+					if(!fileHandle) {
+						progVideo.text = '<span style="color: var(--cFail)">已取消</span>';
+						progVideo.button = { text: '下载', click: fetchLargeVideo };
+
+						return;
+					}
+
+
+					const abortController = new AbortController();
+					progVideo.button = { text: '取消', click: () => { abortController.abort(); } };
+
+					let writable;
+					try {
+						const response = await fetch(urlVideo, { signal: abortController.signal });
+						const reader = response.body.getReader();
+						writable = await fileHandle.createWritable();
+
+						let throttle = 0;
+						await readReader(reader, async (data, sizeReadAfter) => {
+							await writable.write(data);
+
+							if(!(throttle++ % 10) || sizeReadAfter == sizeVideo) {
+								progVideo.value = sizeReadAfter;
+								progVideo.text = `${(sizeReadAfter * 100 / sizeVideo).toFixed(1).padStart(5, ' ')}%`;
+							}
+						});
+
+						await writable.close();
+
+						progVideo.text = `<span style="color: var(--cOkay)">${progVideo.text}</span>`;
+						progVideo.button = null;
+					}
+					catch(error) {
+						if(writable) {
+							try { await writable.abort(); } catch { void 0; }
 						}
-					},
-				}).then(datas => {
-					progVideo.text = `<span style="color: var(--cOkay)">${progVideo.text}</span>`;
-					progVideo.button = { text: '下载', click: () => createSaveLink(nameSaveVideo, URL.createObjectURL(new Blob([datas]))).click() };
 
-					return datas;
-				}) : null,
-
-				urlAudio ? fetchMediaData({ url: urlAudio, nameLog: 'source-audio', nameSave: nameSaveAudio, size: sizeAudio }, {
-					updateProg: (error, value) => {
-						if(error) { progAudio.error = error; return progAudio.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
-
-						if(!(throttleAudio++ % 10) || value == sizeAudio) {
-							progAudio.value = value;
-
-							progAudio.text = `${(value * 100 / sizeAudio).toFixed(1).padStart(5, ' ')}%`;
+						if(error.name == 'AbortError') {
+							progVideo.text = '<span style="color: var(--cFail)">已取消</span>';
 						}
-					},
-				}).then(datas => {
-					progAudio.text = `<span style="color: var(--cOkay)">${progAudio.text}</span>`;
-					progAudio.button = { text: '下载', click: () => createSaveLink(nameSaveAudio, URL.createObjectURL(new Blob([datas]))).click() };
+						else {
+							progVideo.error = error;
+							progVideo.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`;
+						}
 
-					return datas;
-				}) : null,
-			]);
-
-
-
-			const labelMixin = `${Math.min(video.width, video.height)}p#${video.bandwidth}`;
-			const nameMixin = !optionVideo.isTrial
-				? `${namePrefix}@${labelMixin}.mp4`.replace(/[~/]/g, '_')
-				: `${namePrefix}@trial.mp4`.replace(/[~/]/g, '_');
+						progVideo.button = { text: '下载', click: fetchLargeVideo };
+					}
+				};
+				const fetchLargeAudio = async () => {
+					progAudio.text = '';
+					progAudio.value = 0;
+					progAudio.button = null;
 
 
-			if(ffmpeg.isLoaded()) {
+					/** @type {FileSystemFileHandle} */
+					let fileHandle;
+					try {
+						fileHandle = await dirn.getFileHandle(nameSaveAudio, { create: true });
+					}
+					catch {
+						progAudio.text = '<span style="color: var(--cFail)">已取消</span>';
+						progAudio.button = { text: '下载', click: fetchLargeAudio };
+
+						return;
+					}
+					if(!fileHandle) {
+						progAudio.text = '<span style="color: var(--cFail)">已取消</span>';
+						progAudio.button = { text: '下载', click: fetchLargeAudio };
+
+						return;
+					}
+
+
+					const abortController = new AbortController();
+					progAudio.button = { text: '取消', click: () => { abortController.abort(); } };
+
+					let writable;
+					try {
+						const response = await fetch(urlAudio, { signal: abortController.signal });
+						const reader = response.body.getReader();
+						writable = await fileHandle.createWritable();
+
+						let throttle = 0;
+						await readReader(reader, async (data, sizeReadAfter) => {
+							await writable.write(data);
+
+							if(!(throttle++ % 10) || sizeReadAfter == sizeAudio) {
+								progAudio.value = sizeReadAfter;
+								progAudio.text = `${(sizeReadAfter * 100 / sizeAudio).toFixed(1).padStart(5, ' ')}%`;
+							}
+						});
+
+						await writable.close();
+
+						progAudio.text = `<span style="color: var(--cOkay)">${progAudio.text}</span>`;
+						progAudio.button = null;
+					}
+					catch(error) {
+						if(writable) {
+							try { await writable.abort(); } catch { void 0; }
+						}
+
+						if(error.name == 'AbortError') {
+							progAudio.text = '<span style="color: var(--cFail)">已取消</span>';
+						}
+						else {
+							progAudio.error = error;
+							progAudio.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`;
+						}
+
+						progAudio.button = { text: '下载', click: fetchLargeAudio };
+					}
+				};
+				const saveLargeMixin = async () => {
+					const dataMixin = new Uint8Array(GBK.encode(`
+						@echo off
+
+						echo 混流[音视频文件]
+						ffmpeg -y -v quiet -i "${nameSaveVideo}" ${sizeAudio ? `-i "${nameSaveAudio}" ` : ''}-vcodec copy -acodec copy "${nameMixin}"
+						echo 混流[音视频文件] 完成
+
+						@REM echo 移除[音视频文件]
+						@REM del "${nameSaveVideo}"
+						@REM del "${nameSaveVideo}"
+						${sizeAudio ? `@REM del "${nameSaveAudio}"` : ''}
+						@REM echo 移除[音视频文件] 完成
+
+						@REM echo 删除脚本自身
+						@REM del %0
+						@REM echo 删除脚本自身 完成
+					`.trim().replace(/\|/g, '_').replace(/\t/g, '').replace(/\n/g, '\r\n')));
+					const sizeMixin = dataMixin.length;
+
+					const nameMinxinSave = `bilibili@${P.uid}@${P.slot}.mixin.bat`;
+
+
+					panelProgs.progs.push({ name: `混流脚本`, text: '', value: 0, max: sizeMixin });
+					const progMixin = panelProgs.progs[panelProgs.progs.length - 1];
+
+
+					let writable;
+					try {
+						const fileHandle = await dirn.getFileHandle(nameMinxinSave, { create: true });
+						writable = await fileHandle.createWritable();
+
+						writable.write(dataMixin);
+
+						await writable.close();
+
+						progMixin.value = sizeMixin;
+						progMixin.text = `<span style="color: var(--cOkay)">100.0%</span>`;
+						progMixin.button = null;
+					}
+					catch(error) {
+						progMixin.error = error;
+						progMixin.text = `<span style="color: var(--cFail)">保存错误, ${error.message ?? error}</span>`;
+						progMixin.button = { text: '保存', click: saveLargeMixin };
+					}
+				};
+
+
+				if(!dirn) {
+					progVideo.text = '<span style="color: var(--cFail)">未选择文件夹</span>';
+					progVideo.button = { text: '下载', click: fetchLargeVideo };
+
+					progAudio.text = '<span style="color: var(--cFail)">未选择文件夹</span>';
+					progAudio.button = { text: '下载', click: fetchLargeAudio };
+
+					panelProgs.progs.unshift({
+						name: `选择文件夹`, text: '', value: 1, max: 1,
+						button: {
+							text: '选择', click: async () => {
+								dirn = await window.showDirectoryPicker({ id: 'bilibili-media-save', mode: 'readwrite' });
+
+								if(dirn) {
+									try {
+										await Promise.all([
+											fetchLargeVideo(),
+											fetchLargeAudio(),
+										]);
+
+										saveLargeMixin();
+									}
+									catch { void 0; }
+								}
+							}
+						},
+					});
+
+					return;
+				}
+
+
+				try {
+					await Promise.all([
+						fetchLargeVideo(),
+						fetchLargeAudio(),
+					]);
+
+					saveLargeMixin();
+				}
+				catch { void 0; }
+			}
+			else {
+				let throttleVideo = 0;
+				let throttleAudio = 0;
+				const [datasVideo, datasAudio] = await Promise.all([
+					urlVideo ? fetchMediaData({ url: urlVideo, nameLog: 'source-video', nameSave: nameSaveVideo, size: sizeVideo }, {
+						updateProg: (error, value) => {
+							if(error) { progVideo.error = error; return progVideo.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+
+							if(!(throttleVideo++ % 10) || value == sizeVideo) {
+								progVideo.value = value;
+
+								progVideo.text = `${(value * 100 / sizeVideo).toFixed(1).padStart(5, ' ')}%`;
+							}
+						},
+					}).then(datas => {
+						progVideo.text = `<span style="color: var(--cOkay)">${progVideo.text}</span>`;
+						progVideo.button = { text: '下载', click: () => createSaveLink(nameSaveVideo, URL.createObjectURL(new Blob([datas]))).click() };
+
+						return datas;
+					}) : null,
+
+					urlAudio ? fetchMediaData({ url: urlAudio, nameLog: 'source-audio', nameSave: nameSaveAudio, size: sizeAudio }, {
+						updateProg: (error, value) => {
+							if(error) { progAudio.error = error; return progAudio.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+
+							if(!(throttleAudio++ % 10) || value == sizeAudio) {
+								progAudio.value = value;
+
+								progAudio.text = `${(value * 100 / sizeAudio).toFixed(1).padStart(5, ' ')}%`;
+							}
+						},
+					}).then(datas => {
+						progAudio.text = `<span style="color: var(--cOkay)">${progAudio.text}</span>`;
+						progAudio.button = { text: '下载', click: () => createSaveLink(nameSaveAudio, URL.createObjectURL(new Blob([datas]))).click() };
+
+						return datas;
+					}) : null,
+				]);
+
+
+
+				panelProgs.progs.push({ name: `完整视频[${labelMixin}]`, text: '<span>混流中...</span>', value: 0, max: 1 });
+				const progMixin = panelProgs.progs[panelProgs.progs.length - 1];
+
+
+				if(!ffmpeg.isLoaded()) {
+					progMixin.text = '<span style="color: var(--cWarn)">ffmpeg加载中...</span>';
+
+					const { promise, resolve } = Promise.withResolvers();
+
+					setInterval(() => ffmpeg.isLoaded() ? resolve() : void 0, 1000 * 2);
+					await promise;
+				}
+
+
 				const datasMixin = await mixinMediaData(datasVideo, datasAudio, nameMixin);
 
-				panelProgs.progs.push({
-					name: `完整视频[${labelMixin}]\n${renderSize(datasMixin.length)}`,
-					text: '<span style="color: var(--cOkay)">已混流</span>', value: 1, max: 1,
-					button: { text: '下载', click: () => createSaveLink(nameMixin, URL.createObjectURL(new Blob([datasMixin]))).click() }
-				});
+				progMixin.name = `完整视频[${labelMixin}]\n${renderSize(datasMixin.length)}`;
+				progMixin.value = 1;
+				progMixin.text = '<span style="color: var(--cOkay)">已混流</span>';
+				progMixin.button = { text: '下载', click: () => createSaveLink(nameMixin, URL.createObjectURL(new Blob([datasMixin]))).click() };
 			}
-			else { alert(`【${GM_info.script.name}】\nffmpeg未加载`); }
-
 		}
 	}, {
 		id: 'fetch-audio-single',
@@ -433,22 +674,98 @@ FM.$panels = [{
 			const prog = panelProgs.progs[panelProgs.progs.length - 1];
 
 
-			let throttle = 0;
-			const datasMedia = await fetchMediaData({ url, nameLog: `source-video#${label}`, nameSave, size }, {
-				saveImmediately: false,
-				updateProg: (error, value) => {
-					if(error) { prog.error = error; return prog.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
+			if(size >= sizeArrayBufferMax) {
+				// 大文件：使用 File System Access API 流式写入，避免内存溢出
+				const fetchLarge = async () => {
+					prog.text = '';
+					prog.value = 0;
+					prog.button = null;
 
-					if(!(throttle++ % 10) || value == size) {
-						prog.value = value;
 
-						prog.text = `${(value * 100 / size).toFixed(1).padStart(5, ' ')}%`;
+					/** @type {FileSystemFileHandle} */
+					let fileHandle;
+					try {
+						fileHandle = await unsafeWindow.showSaveFilePicker({ suggestedName: nameSave });
 					}
-				},
-			});
+					catch {
+						prog.text = '<span style="color: var(--cFail)">已取消</span>';
+						prog.button = { text: '下载', click: fetchLarge };
 
-			prog.text = `<span style="color: var(--cOkay)">${prog.text}</span>`;
-			prog.button = { text: '下载', click: () => createSaveLink(nameSave, URL.createObjectURL(new Blob([datasMedia]))).click() };
+						return;
+					}
+					if(!fileHandle) {
+						prog.text = '<span style="color: var(--cFail)">已取消</span>';
+						prog.button = { text: '下载', click: fetchLarge };
+
+						return;
+					}
+
+
+					const abortController = new AbortController();
+					prog.button = { text: '取消', click: () => { abortController.abort(); } };
+
+					let writable;
+					try {
+						const response = await fetch(url, { signal: abortController.signal });
+						const reader = response.body.getReader();
+						writable = await fileHandle.createWritable();
+
+						let throttle = 0;
+						await readReader(reader, async (data, sizeReadAfter) => {
+							await writable.write(data);
+
+							if(!(throttle++ % 10) || sizeReadAfter == size) {
+								prog.value = sizeReadAfter;
+								prog.text = `${(sizeReadAfter * 100 / size).toFixed(1).padStart(5, ' ')}%`;
+							}
+						});
+
+						await writable.close();
+
+						prog.text = `<span style="color: var(--cOkay)">${prog.text}</span>`;
+						prog.button = null;
+					}
+					catch(error) {
+						if(writable) {
+							try { await writable.abort(); } catch { void 0; }
+						}
+
+						if(error.name == 'AbortError') {
+							prog.text = '<span style="color: var(--cFail)">已取消</span>';
+						}
+						else {
+							prog.error = error;
+							prog.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`;
+						}
+
+						prog.button = { text: '下载', click: fetchLarge };
+					}
+				};
+
+				await fetchLarge();
+			}
+			else {
+				let throttle = 0;
+				const datasMedia = await fetchMediaData({ url, nameLog: `source-video#${label}`, nameSave, size }, {
+					saveImmediately: false,
+					updateProg: (error, value) => {
+						if(error) {
+							prog.error = error;
+							prog.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`;
+
+							return;
+						}
+
+						if(!(throttle++ % 10) || value == size) {
+							prog.value = value;
+							prog.text = `${(value * 100 / size).toFixed(1).padStart(5, ' ')}%`;
+						}
+					},
+				});
+
+				prog.text = `<span style="color: var(--cOkay)">${prog.text}</span>`;
+				prog.button = { text: '下载', click: () => createSaveLink(nameSave, URL.createObjectURL(new Blob([datasMedia]))).click() };
+			}
 		}
 	}, {
 		id: 'fetch-audio-single',

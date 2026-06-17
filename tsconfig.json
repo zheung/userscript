@@ -3,13 +3,16 @@
 		"module": "esnext",
 		"moduleResolution": "bundler",
 		"target": "esnext",
-		"experimentalDecorators": true,
-		"strict": true,
+		"composite": true,
 		"allowJs": true,
-		"jsx": "preserve",
 		"declaration": true,
+		"emitDeclarationOnly": true,
 		"declarationDir": "./types",
-		"emitDeclarationOnly": true
+		"types": [
+			"node",
+			"tampermonkey",
+			"wicg-file-system-access",
+		],
 	},
 	"include": [
 		"**/*.js",

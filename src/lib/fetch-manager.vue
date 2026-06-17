@@ -7,7 +7,7 @@
 			:style="{ width: $widthPanel }"
 			@mouseleave="$openedPanel = false">
 			<p-main>
-				<p-main-title>{{ $panels.title || '下载管理' }}</p-main-title>
+				<p-main-title :title="$version">{{ $panels.title || '下载管理' }}</p-main-title>
 				<p-main-button style-button @click="$pinnedPanel = false, $openedPanel = false">
 					<Icon :icon="faXmark" /> 关闭
 				</p-main-button>
@@ -148,6 +148,7 @@ export const $panels = ref([]);
 export const $widthPanel = ref('auto');
 export const $willStorageValue = ref(false);
 export const $colorMain = ref('#1FAAF1');
+export const $version = ref(GM_info.script.version);
 
 
 export const $states = { $openedPanel, $pinnedPanel, $panels, $widthPanel, $willStorageValue };
@@ -238,6 +239,7 @@ p-fetch-manager
 	&
 		--cOkay: #16A34A
 		--cFail: #DC2626
+		--cWarn: #FFA500
 
 p-fetch-manager
 	@apply fixed inblock z-[9998] text-sm text-[var(--cText)]
