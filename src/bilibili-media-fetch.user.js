@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        bilibili-media-fetch
 // @namespace   https://danor.app
-// @version     2.2.0+26061716
+// @version     2.2.1+26062309
 // @author      DanoR
 // @description 【哔哩哔哩】视频音频下载
 // @grant       GM_addStyle
@@ -16,8 +16,9 @@
 
 /* global FFmpeg, GBK */
 
-import { FetchManager, $panels, $states } from './lib/fetch-manager.vue';
 import { G } from './lib/logger.js';
+import { createSaveLink, fetchFileData, fetchFileSize, readReader } from './lib/util.js';
+import { FetchManager, $panels, $states } from './lib/fetch-manager.vue';
 
 import { faFileAudio, faFileVideo, faFilm } from '@fortawesome/free-solid-svg-icons';
 
@@ -42,7 +43,7 @@ const ffmpeg = ffmpegLoad;
 
 		G.info('init-ffmpeg', '✔');
 	}
-	catch(error) { G.error('init-ffmpeg', '✖', error.message, error.stack); }
+	catch(error) { G.error('init-ffmpeg', '✘', error.message, error.stack); }
 })();
 
 
@@ -135,91 +136,8 @@ if(PD.dash?.flac?.audio) {
 }
 
 
+
 /* 脚本功能 */
-const createSaveLink = (download, href, innerHTML = '', title) => {
-	const a = document.createElement('a');
-
-	a.setAttribute('saver', '');
-
-	a.innerHTML = innerHTML;
-
-	if(download) { a.download = download; }
-	if(href) { a.href = href; }
-	if(title) { a.title = title; }
-
-	return a;
-};
-
-
-
-
-
-/**
- * @param {ReadableStreamDefaultReader<Uint8Array>} reader
- * @param {Function} handle
- */
-const readReader = async (reader, handle) => {
-	let sizeRead = 0;
-	let isWhile = true;
-
-	while(isWhile) {
-		const { done, value } = await reader.read();
-
-		if(!done || sizeRead == 0) {
-			await handle(value, sizeRead += value.length, sizeRead - value.length);
-		}
-		else {
-			isWhile = false;
-		}
-	}
-};
-
-const fetchMediaSize = async url => {
-	const controller = new AbortController();
-
-	const responseSize = await fetch(new Request(url, { method: 'GET', signal: controller.signal }));
-
-	const size = +responseSize.headers.get('Content-Length');
-
-	controller.abort();
-
-	return size;
-};
-
-const fetchMediaData = async (media, { saveImmediately = false, updateProg = () => { } } = {}) => {
-	try {
-		const responseGet = await fetch(media.url);
-
-		const reader = responseGet.body.getReader();
-
-		const datasMedia = new Uint8Array(media.size);
-
-		await readReader(reader, async (data, sizeReadAfter, sizeRead) => {
-			datasMedia.set(data, sizeRead);
-
-			updateProg(null, sizeReadAfter, media);
-		});
-
-
-		if(saveImmediately) {
-			createSaveLink(media.nameSave, URL.createObjectURL(new Blob([datasMedia]))).click();
-		}
-
-
-		G.info('download-media', '✔', media.nameLog);
-
-
-		return datasMedia;
-	}
-	catch(error) {
-		G.error('download-media', '✖', media.nameLog, error.message ?? error);
-
-		updateProg(error, null, media);
-
-		throw error;
-	}
-};
-
 const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDownload) => {
 	ffmpeg.FS('writeFile', 'video.m4s', datasVideo);
 	if(datasAudio) {
@@ -241,6 +159,7 @@ const mixinMediaData = async (datasVideo, datasAudio, nameFile, isCloseAfterDown
 
 	return datasMixin;
 };
+
 
 
 /* 应用 */
@@ -337,8 +256,8 @@ FM.$panels = [{
 			const urlVideo = video ? getMediaURL(video, getConfig('keyURLVideoPrefer', configs)) : null;
 			const urlAudio = audio ? getMediaURL(audio, getConfig('keyURLAudioPrefer', configs)) : null;
 
-			const sizeVideo = urlVideo ? await fetchMediaSize(urlVideo) : 0;
-			const sizeAudio = urlAudio ? await fetchMediaSize(urlAudio) : 0;
+			const sizeVideo = urlVideo ? await fetchFileSize(urlVideo) : 0;
+			const sizeAudio = urlAudio ? await fetchFileSize(urlAudio) : 0;
 
 			const labelVideo = getOptionLabel(optionVideo);
 			const labelAudio = getOptionLabel(optionAudio);
@@ -588,15 +507,21 @@ FM.$panels = [{
 				let throttleVideo = 0;
 				let throttleAudio = 0;
 				const [datasVideo, datasAudio] = await Promise.all([
-					urlVideo ? fetchMediaData({ url: urlVideo, nameLog: 'source-video', nameSave: nameSaveVideo, size: sizeVideo }, {
-						updateProg: (error, value) => {
-							if(error) { progVideo.error = error; return progVideo.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
-
+					urlVideo ? fetchFileData(urlVideo, {
+						size: sizeVideo,
+						nameSave: nameSaveVideo,
+						atProgress: (value) => {
 							if(!(throttleVideo++ % 10) || value == sizeVideo) {
 								progVideo.value = value;
 
 								progVideo.text = `${(value * 100 / sizeVideo).toFixed(1).padStart(5, ' ')}%`;
 							}
+						},
+						atFinish() { G.info('下载源视频', '✔'); },
+						atError(error) {
+							progVideo.error = error; progVideo.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`;
+
+							G.error('下载源视频', '✘', error?.message ?? error, error?.stack);
 						},
 					}).then(datas => {
 						progVideo.text = `<span style="color: var(--cOkay)">${progVideo.text}</span>`;
@@ -605,15 +530,21 @@ FM.$panels = [{
 						return datas;
 					}) : null,
 
-					urlAudio ? fetchMediaData({ url: urlAudio, nameLog: 'source-audio', nameSave: nameSaveAudio, size: sizeAudio }, {
-						updateProg: (error, value) => {
-							if(error) { progAudio.error = error; return progAudio.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }
-
+					urlAudio ? fetchFileData(urlAudio, {
+						size: sizeAudio,
+						nameSave: nameSaveAudio,
+						atProgress: (value) => {
 							if(!(throttleAudio++ % 10) || value == sizeAudio) {
 								progAudio.value = value;
 
 								progAudio.text = `${(value * 100 / sizeAudio).toFixed(1).padStart(5, ' ')}%`;
 							}
+						},
+						atFinish() { G.info('下载源音频', '✔'); },
+						atError(error) {
+							progAudio.error = error; progAudio.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`;
+
+							G.error('下载源音频', '✘', error?.message ?? error, error?.stack);
 						},
 					}).then(datas => {
 						progAudio.text = `<span style="color: var(--cOkay)">${progAudio.text}</span>`;
@@ -662,7 +593,7 @@ FM.$panels = [{
 
 			const url = video ? getMediaURL(video, getConfig('keyURLVideoPrefer', configs)) : null;
 
-			const size = url ? await fetchMediaSize(url) : 0;
+			const size = url ? await fetchFileSize(url) : 0;
 
 			const label = getOptionLabel(option);
 			const nameSave = `${namePrefix}@源视频#${label}.m4s`.replace(/[~/]/g, '_');
@@ -746,7 +677,7 @@ FM.$panels = [{
 			}
 			else {
 				let throttle = 0;
-				const datasMedia = await fetchMediaData({ url, nameLog: `source-video#${label}`, nameSave, size }, {
+				const datasMedia = await fetchFileData({ url, nameLog: `源视频#${label}`, nameSave, size }, {
 					saveImmediately: false,
 					updateProg: (error, value) => {
 						if(error) {
@@ -782,7 +713,7 @@ FM.$panels = [{
 
 			const url = audio ? getMediaURL(audio, getConfig('keyURLAudioPrefer', configs)) : null;
 
-			const size = url ? await fetchMediaSize(url) : 0;
+			const size = url ? await fetchFileSize(url) : 0;
 
 			const label = getOptionLabel(option);
 			const nameSave = `${namePrefix}@源音频#${label}.m4s`.replace(/[~/]/g, '_');
@@ -795,7 +726,7 @@ FM.$panels = [{
 
 
 			let throttle = 0;
-			const datasMedia = await fetchMediaData({ url, nameLog: `source-audio#${label}`, nameSave, size }, {
+			const datasMedia = await fetchFileData({ url, nameLog: `源音频#${label}`, nameSave, size }, {
 				saveImmediately: false,
 				updateProg: (error, value) => {
 					if(error) { prog.error = error; return prog.text = `<span style="color: var(--cFail)">下载错误, ${error.message ?? error}</span>`; }

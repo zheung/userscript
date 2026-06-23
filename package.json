@@ -1,6 +1,6 @@
 {
 	"name": "@danor/userscript",
-	"version": "2.2.2",
+	"version": "2.2.3",
 	"description": "",
 	"author": "DanoR",
 	"license": "LGPL-3.0-or-later",
@@ -25,7 +25,7 @@
 		"@fortawesome/vue-fontawesome": "^3.2.0",
 		"@nuogz/pangu": "^5.6.0",
 		"@stylistic/eslint-plugin": "^5.10.0",
-		"@types/node": "^25.9.3",
+		"@types/node": "^26.0.0",
 		"@types/tampermonkey": "^5.0.5",
 		"@types/wicg-file-system-access": "^2023.10.7",
 		"@unocss/postcss": "66.7.2",

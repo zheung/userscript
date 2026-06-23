@@ -90,6 +90,8 @@ forniphilia:人间家具
 smoking:性交中吸烟
 emotionless sex:无表情性交
 armpit sex:腋交
+clothed female nude male:裸男衣女
+selfcest:自乱伦
 
 ##行为细节
 wormhole:虫洞交
@@ -98,6 +100,7 @@ sleeping:睡奸
 large insertions:扩张插入
 double penetration:双重插入
 urethra insertion:尿道插入
+shared senses:共享感官
 
 bestiality:兽交
 low bestiality:轻度兽交
@@ -153,6 +156,7 @@ tentacles:触手
 makeup:化妆品
 pillory:颈手枷
 wooden horse:木马
+diaper:尿布
 
 ## 人体产物
 smegma:包皮垢

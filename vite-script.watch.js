@@ -14,22 +14,24 @@ import pluginUno from 'unocss/vite';
 if('2' in process.argv == false) { throw Error('缺少目标脚本参数'); }
 
 
-const dirWorking = process.cwd();
+const dirnWorking = process.cwd();
 const fileScript = process.argv[2];
-const pathScript = resolve(dirWorking, fileScript);
+const pathScript = resolve(dirnWorking, fileScript);
 const pathParsedScript = parse(pathScript);
 
 
 const textScript = readFileSync(pathScript, 'utf-8');
-const nameMetaScript = textScript.match(/==UserScript==.*(?:@name +(.+?)\n).*==\/UserScript==/ms)?.[1];
+const meta = textScript.match(/\/\/ ==UserScript==.*?==\/UserScript==/ms)?.[0]?.trim();
+const nameMetaScript = meta.match(/==UserScript==.*(?:@name +(.+?)\n).*==\/UserScript==/ms)?.[1];
 
 globalThis.console.log('脚本文件', pathParsedScript.base);
 globalThis.console.log('脚本名称', nameMetaScript);
+globalThis.console.log('脚本Meta');
+globalThis.console.log(meta);
 
 
-
-const dirPackage = fileURLToPath(new URL('.', import.meta.url));
-const pathEntry = resolve(dirPackage, 'src', 'index.html');
+const dirnPackage = fileURLToPath(new URL('.', import.meta.url));
+const pathEntry = resolve(dirnPackage, 'src', 'index.html');
 writeFileSync(pathEntry,
 	readFileSync(pathEntry, 'utf-8').replace(
 		/src=".*?"/,
@@ -39,9 +41,9 @@ writeFileSync(pathEntry,
 
 
 
-/** @type {import('vite').Rollup.OutputPluginOption} */
+/** @type {import('vite').Rolldown.Plugin} */
 const pluginUserscriptMixin = {
-	name: 'rollup-plugin-userscript-mixin',
+	name: 'rolldown-plugin-userscript-mixin',
 	generateBundle: {
 		order: 'post',
 		handler(options, bundle) {
@@ -55,6 +57,8 @@ const pluginUserscriptMixin = {
 
 
 			if(code) {
+				code = `${meta}\n${code}`;
+
 				this.emitFile({
 					type: 'prebuilt-chunk',
 					fileName: `${nameMetaScript}.user.js`,
@@ -67,8 +71,8 @@ const pluginUserscriptMixin = {
 
 
 
-/** @type {import('vite').Rollup.RollupWatcher} */
-const watcherRollup = await build({
+/** @type {import('vite').Rolldown.RolldownWatcher} */
+const watcherRolldown = await build({
 	mode: 'production',
 	clearScreen: false,
 	plugins: [
@@ -81,7 +85,7 @@ const watcherRollup = await build({
 			}
 		})
 	],
-	root: resolve(dirPackage, 'src'),
+	root: resolve(dirnPackage, 'src'),
 	base: './',
 	build: {
 		target: 'esnext',
@@ -89,18 +93,15 @@ const watcherRollup = await build({
 		modulePreload: { polyfill: false },
 		write: false,
 		watch: { include: [fileScript] },
-		outDir: C.dirDist,
+		outDir: C.dirnDist,
 		emptyOutDir: false,
-		rollupOptions: {
+		rolldownOptions: {
 			output: { plugins: [pluginUserscriptMixin] }
 		}
 	},
-	optimizeDeps: {
-		esbuildOptions: { target: 'esnext' }
-	},
 });
 
-watcherRollup.on('event', event => {
+watcherRolldown.on('event', event => {
 	if(event.code == 'BUNDLE_START') { return globalThis.console.log('脚本构建开始'); }
 	if(event.code != 'BUNDLE_END') { return; }
 

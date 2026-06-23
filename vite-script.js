@@ -14,9 +14,9 @@ import pluginUno from 'unocss/vite';
 if('2' in process.argv == false) { throw Error('缺少目标脚本参数'); }
 
 
-const dirWorking = process.cwd();
+const dirnWorking = process.cwd();
 const fileScript = process.argv[2];
-const pathScript = resolve(dirWorking, fileScript);
+const pathScript = resolve(dirnWorking, fileScript);
 const pathParsedScript = parse(pathScript);
 
 
@@ -26,10 +26,12 @@ const nameMetaScript = meta.match(/==UserScript==.*(?:@name +(.+?)\n).*==\/UserS
 
 globalThis.console.log('脚本文件', pathParsedScript.base);
 globalThis.console.log('脚本名称', nameMetaScript);
+globalThis.console.log('脚本Meta');
+globalThis.console.log(meta);
 
 
-const dirPackage = fileURLToPath(new URL('.', import.meta.url));
-const pathEntry = resolve(dirPackage, 'src', 'index.html');
+const dirnPackage = fileURLToPath(new URL('.', import.meta.url));
+const pathEntry = resolve(dirnPackage, 'src', 'index.html');
 writeFileSync(pathEntry,
 	readFileSync(pathEntry, 'utf-8').replace(
 		/src=".*?"/,
@@ -51,7 +53,7 @@ const { output: outputs } = await build({
 			}
 		})
 	],
-	root: resolve(dirPackage, 'src'),
+	root: resolve(dirnPackage, 'src'),
 	base: './',
 	build: {
 		target: 'esnext',
@@ -72,7 +74,7 @@ if(codeStyle) { code = `\nGM_addStyle(\`${codeStyle.source.trim()}\`);\n` + code
 if(code) {
 	code = `${meta}\n${code}`;
 
-	writeFileSync(resolve(C.dirDist, `${nameMetaScript}.user.js`), code);
+	writeFileSync(resolve(C.dirnDist, `${nameMetaScript}.user.js`), code);
 }
 
 const url = `http://userscript.localhost/${nameMetaScript}.user.js`;
